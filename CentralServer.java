@@ -40,7 +40,7 @@ class CentralServer {
         
     }
     */
-    /*
+    
     //records who is in the database currently
     private static void sendToFile() throws FileNotFoundException {
         PrintWriter pw = new PrintWriter(new FileOutputStream("dbFiles.txt"));
@@ -56,8 +56,8 @@ class CentralServer {
         }
         pw.close();
     }
-    */
-    /*
+    
+    
     //adds files to our hash
     public static void addFilesToword(String files) {
         String[] split = files.split("\0");
@@ -87,7 +87,7 @@ class CentralServer {
         }
 
     }
-    */
+    
   /*
     //deregisters user when disconnect
     public static void deregister(String port){
@@ -130,9 +130,9 @@ class CentralServer {
         }
         return reformattedFiles;
     }
-
-}
 */
+}
+
 class SubServerHandler implements Runnable {
 
     private Socket socket;
@@ -153,8 +153,6 @@ class SubServerHandler implements Runnable {
         byte[] data;
         String frstln;
         String[] commands;
-
-
         int port = this.socket.getPort();
         String username="",hostname,address,connection;
         while (true) {
@@ -209,3 +207,4 @@ class SubServerHandler implements Runnable {
         }
     }
 }
+
