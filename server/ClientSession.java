@@ -44,8 +44,9 @@ public class ClientSession {
 
     public void startGame() {
         try {
+            System.out.println("Talking to central...");
             DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
-            centralDOS.writeUTF(String.format("start %s:%d", this.address, this.port));
+            centralDOS.writeBytes(String.format("start %s:%d\n", this.address, this.port));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -54,7 +55,7 @@ public class ClientSession {
     public PlayersObservable getObservable() {
         return this.server.getObservable();
     }
-    
+
     //closes client session
     public void close() {
         if (this.controlSocket != null) {
@@ -89,5 +90,9 @@ public class ClientSession {
 
     public DataInputStream getInputStream() {
         return this.in;
+    }
+
+    public String getHostName() {
+        return String.format("%s:%d", this.address, this.port);
     }
 }

@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.Map.Entry;
 
 import server.ClientSession;
 import server.PlayersObservable;
@@ -25,36 +26,53 @@ public class GUI extends JFrame implements ActionListener, Observer {
 
     public GUI() {
         super("Poker");
-        this.panel.setBackground(new Color(12, 107, 17));
-        this.panel.setLayout(new GridBagLayout());
-        GridBagConstraints cons = new GridBagConstraints();
-        Deck deck = new Deck();
-        PlayerPane player1 = new PlayerPane(true, deck.draw(), deck.draw());
-        panel.add(player1);
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 3;
-        cons.gridy = 5;
-        cons.anchor = GridBagConstraints.PAGE_END;
-        cons.gridwidth = 2;
-        this.panel.add(player1, cons);
-
-        PlayerPane player2 = new PlayerPane(false, deck.draw(), deck.draw());
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 0;
-        cons.gridy = 0;
-        this.panel.add(player2, cons);
-        
-        this.add(this.panel);
-        this.setBounds(200, 200, 640, 480);
        // this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initializeRegGUI();
         //this.setVisible(true);
     }
 
+    public void initializeGameGUI() {
+        frame.getContentPane().removeAll();
+        this.panel.setBackground(new Color(12, 107, 17));
+        this.panel.setLayout(new GridBagLayout());
+        GridBagConstraints cons = new GridBagConstraints();
+        Deck deck = new Deck();
+        ArrayList<Entry<String, String>> playerInfo = this.players.getPlayers();
+        int length = playerInfo.size() / 2; // figure out how to layout a circle T_T
+        int x = 0;
+        int y = 0;
+        boolean firstRow = true; 
+        // TODO: figure out how to put current player's panel at a specific position
+        for (int i = 0; i < playerInfo.size(); i++) {
+            boolean isMyPanel = playerInfo.get(i).getKey().contains(this.clientSession.getHostName());
+            PlayerPane tmp = new PlayerPane(isMyPanel, deck.draw(), deck.draw()); // TODO: don't draw for everyone, central deck?
+            cons.fill = GridBagConstraints.HORIZONTAL;
+            cons.gridx = x;
+            cons.gridy = y;
+            cons.anchor = GridBagConstraints.PAGE_END;
+            cons.gridwidth = 2;
+            this.panel.add(tmp, cons);
+            if (y >= length * 3) {
+                x += 3;
+            } else if (firstRow) {
+                y += 3;
+            }
+            if (!firstRow) {
+                y -= 3;
+            }
+        }
+        
+        this.panel.setPreferredSize(new Dimension(640, 480));
+        frame.add(this.panel);
+        frame.setBounds(200, 200, 640, 480);
+        frame.setBackground(new Color(12, 107, 17));
+        frame.pack();
+    }
+
     public void initializeRegGUI() {
         //initialize fields
-        cHostN_field = new JTextField(20);
-        cPort_field = new JTextField(5);
+        cHostN_field = new JTextField("localhost", 20);
+        cPort_field = new JTextField("1200", 5);
         username_field = new JTextField(20);
         //initialize labels
         cHostName = new JLabel("Central Server Hostname: ");
@@ -85,7 +103,6 @@ public class GUI extends JFrame implements ActionListener, Observer {
         regCons.gridy=5;
         this.regPanel.add(cHostN_field, regCons);
 
-    
         regCons.gridx = 1;
         regCons.gridy = 7;
         this.regPanel.add(cPort, regCons);
@@ -173,9 +190,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
         JButton startButton = new JButton("Start Game!");
         startButton.addActionListener(e -> {
             this.clientSession.startGame();
-            frame.getContentPane().removeAll();
-            frame.getContentPane().add(this.panel);
-            frame.pack();
+            initializeGameGUI();
         });
         this.lobbyPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -191,7 +206,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
         gbc.gridwidth = 3;
         gbc.anchor = GridBagConstraints.PAGE_END;
         this.lobbyPanel.add(startButton, gbc);
-        
+
         frame.add(this.lobbyPanel);
         frame.invalidate();
         frame.validate();
@@ -200,15 +215,19 @@ public class GUI extends JFrame implements ActionListener, Observer {
     }
 
     private JPanel playerLobby() {
-        ArrayList<String> playersList = this.players.getPlayers();
+        ArrayList<Entry<String, String>> playersList = this.players.getPlayers();
 
         JPanel panel = new JPanel();
         panel.setBackground(new Color(255, 255, 255, 80));
         panel.setPreferredSize(new Dimension(200, 200));
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(new JLabel("Players:"));
-        for (String player: playersList) {
-            panel.add(new JLabel(player));
+        for (Entry<String, String> player: playersList) {
+            if (player.getKey().contains(this.clientSession.getHostName())) {
+                panel.add(new JLabel(player.getValue() + " <-- You!"));
+            } else {
+                panel.add(new JLabel(player.getValue()));
+            }
         }
         return panel;
     }
@@ -216,11 +235,18 @@ public class GUI extends JFrame implements ActionListener, Observer {
     @Override
     public void update(Observable o, Object arg) {
         this.players = ((PlayersObservable) o);
-        this.lobbyPanel.remove(0);
-        JPanel playerLobby = playerLobby();
-        this.lobbyPanel.add(playerLobby(), 0);
-        frame.invalidate();
-        frame.validate();
-        frame.repaint();
+        if (arg instanceof ArrayList) {
+            this.lobbyPanel.remove(0);
+            JPanel playerLobby = playerLobby();
+            this.lobbyPanel.add(playerLobby(), 0);
+            frame.invalidate();
+            frame.validate();
+            frame.repaint();
+        } else if (arg instanceof Entry) {
+            if (!this.panel.isDisplayable()) {
+                initializeGameGUI();
+            }
+            System.out.println("Currently " + this.players.getTurn().getValue() + "'s Turn");
+        }
     }
 }

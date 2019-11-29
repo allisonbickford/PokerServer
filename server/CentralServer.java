@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.*;
 
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.regex.*;
 
 class CentralServer {
@@ -43,6 +44,7 @@ class CentralServer {
                 Socket tmpSocket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
                 DataOutputStream dos = new DataOutputStream(tmpSocket.getOutputStream());
                 dos.writeBytes(message + "\n");
+                dos.flush();
                 dos.close();
                 tmpSocket.close();
             } catch (Exception e) {
@@ -61,15 +63,16 @@ class CentralServer {
         word.put(host, user);
     }
 
+
     /**
-     * Creates a string of player usernames
+     * Creates a list of player usernames
      * 
      * @return all player usernames
      */
-    public static ArrayList<String> getPlayers() {
-        ArrayList<String> players = new ArrayList();
-        for (String value: word.values()) {
-            players.add(value);
+    public static ArrayList<Entry<String, String>> getPlayers() {
+        ArrayList<Entry<String, String>> players = new ArrayList();
+        for (Entry<String, String> entry: word.entrySet()) {
+            players.add(Map.entry(entry.getKey(), entry.getValue()));
         }
         return players;
     }
@@ -147,7 +150,6 @@ class SubServerHandler implements Runnable {
 
         while (true) {
             try {
-
                 try {
                     fromClient = inFromClient.readLine();
                 } catch(IOException io) {
@@ -166,27 +168,24 @@ class SubServerHandler implements Runnable {
                     outToClient.close();
                     this.socket.close();
                     break;
-                } else if (clientCommand.equals("start")) {
+                } else if (clientCommand.startsWith("start")) {
                     CentralServer.startGame(commands[1]);
-                    CentralServer.broadcast("STARTING! Players: " + CentralServer.getNumberOfPlayers() + " Host: " + commands[1]);
-                } else if (clientCommand.equals("quit")) {
+                    CentralServer.broadcast(this.socket.getPort() + " STARTING! Players: " + CentralServer.getNumberOfPlayers() + " Host: " + commands[1]);
+                } else if (clientCommand.startsWith("quit")) {
                     if (commands[1] == CentralServer.getGameHost()) {
                         CentralServer.endGame();
                         CentralServer.broadcast("GAMEOVER");
                     }
-                } else {
-                    //new connection, add information to the hashmap to store
-                    if (clientCommand.startsWith("newuser:")) {
-                        username = commands[1];
-                        CentralServer.createword(username, commands[2]);
-                        System.out.println("Registered new player " + username);
-                        Thread.sleep(250); // wait for server to open
-                        String playerMessage = String.format("%d players:", this.socket.getPort());
-                        for (String player: CentralServer.getPlayers()) {
-                            playerMessage += String.format(" %s", player);
-                        }
-                        CentralServer.broadcast(playerMessage);
+                } else if (clientCommand.startsWith("newuser:")) {
+                    username = commands[1];
+                    CentralServer.createword(username, commands[2]);
+                    System.out.println("Registered new player " + username);
+                    Thread.sleep(250); // wait for server to open
+                    String playerMessage = String.format("%d players:", this.socket.getPort());
+                    for (Entry player: CentralServer.getPlayers()) {
+                        playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
                     }
+                    CentralServer.broadcast(playerMessage);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

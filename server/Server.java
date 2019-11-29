@@ -3,6 +3,9 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.Map.Entry;
+
+import game.Deck;
 
 class Server implements Runnable {
     public int port;
@@ -30,7 +33,7 @@ class Server implements Runnable {
         }
     }
 
-    public void setPlayers(ArrayList<String> updatedPlayers) {
+    public void setPlayers(ArrayList<Entry<String, String>> updatedPlayers) {
         playersObservable.setPlayers(updatedPlayers);
     }
 
@@ -56,6 +59,7 @@ class ClientHandler implements Runnable {
         String clientCommand;
         String frstln;
         int port = this.socket.getPort();
+        Deck deck = null;
 
         while (true) {
             try {
@@ -80,12 +84,31 @@ class ClientHandler implements Runnable {
                     this.socket.close();
                     break;
                 } else if (clientCommand.startsWith("players")) {
-                    ArrayList<String> updatedPlayers = new ArrayList<>();
+                    ArrayList<Entry<String, String>> updatedPlayers = new ArrayList<>();
                     while (tokens.hasMoreTokens()) {
                         String player = tokens.nextToken();
-                        updatedPlayers.add(player);
+                        String[] info = player.split("\0");
+                        updatedPlayers.add(Map.entry(info[0], info[1]));
                     }
                     players.setPlayers(updatedPlayers);
+                } else if (clientCommand.startsWith("STARTING!")) {
+                    tokens.nextToken(); // Players:
+                    int amtOfPlayers = Integer.parseInt(tokens.nextToken());
+                    tokens.nextToken(); // Host:
+                    String host = tokens.nextToken();
+                    System.out.println("Dealer is: " + host);
+                    ArrayList<Entry<String, String>> playerInfo = players.getPlayers();
+                    int dealerIndex = 0;
+                    for (int i = 0; i < playerInfo.size(); i++) {
+                        if (playerInfo.get(i).getKey().contains(host)) {
+                            dealerIndex = i;
+                        }
+                    }
+                    Entry firstToAct = playerInfo.get((dealerIndex + 2) % playerInfo.size());
+                    if (playerInfo.size() == 2) { // heads up game has different rules
+                        firstToAct = playerInfo.get((dealerIndex + 1) % playerInfo.size());
+                    }
+                    players.setTurn(firstToAct);
                 } else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());
