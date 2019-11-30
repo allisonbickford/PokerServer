@@ -6,10 +6,11 @@ import java.util.Map.Entry;
 import java.util.Map;
 
 public class PlayersObservable extends Observable {
-  private ArrayList<Entry<String, String>> players = new ArrayList<>();
-  private Entry<String, String> turn = Map.entry("", "");
+  private ArrayList<Player> players = new ArrayList<>();
+  private Player turn = null;
+  private int currentPot = 0;
 
-  public void setPlayers(ArrayList<Entry<String, String>> players) {
+  public void setPlayers(ArrayList<Player> players) {
     synchronized (this) {
       this.players = players;
     }
@@ -17,19 +18,31 @@ public class PlayersObservable extends Observable {
     notifyObservers(players);
   }
 
-  public void setTurn(Entry host) {
+  public void setTurn(int index) {
     synchronized (this) {
-      this.turn = host;
+      this.turn = this.players.get(index);
     }
     setChanged();
-    notifyObservers(host);
+    notifyObservers(this.players.get(index));
   }
 
-  public synchronized ArrayList<Entry<String, String>> getPlayers() {
+  public void setPot(int money) {
+    synchronized (this) {
+      this.currentPot = money;
+    }
+    setChanged();
+    notifyObservers();
+  }
+
+  public synchronized ArrayList<Player> getPlayers() {
     return players;
   }
 
-  public synchronized Entry getTurn() {
+  public synchronized Player getTurn() {
     return turn;
+  }
+
+  public synchronized int getPot() {
+    return this.currentPot;
   }
 }

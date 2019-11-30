@@ -33,7 +33,7 @@ class Server implements Runnable {
         }
     }
 
-    public void setPlayers(ArrayList<Entry<String, String>> updatedPlayers) {
+    public void setPlayers(ArrayList<Player> updatedPlayers) {
         playersObservable.setPlayers(updatedPlayers);
     }
 
@@ -45,12 +45,12 @@ class Server implements Runnable {
 class ClientHandler implements Runnable {
     private Socket socket;
     private String userName;
-    private PlayersObservable players;
+    private PlayersObservable playersObservable;
 
-    public ClientHandler(Socket socket, String userName, PlayersObservable players) {
+    public ClientHandler(Socket socket, String userName, PlayersObservable playersObservable) {
         this.socket = socket;
         this.userName = userName;
-        this.players = players;
+        this.playersObservable = playersObservable;
     }
 
     @Override
@@ -84,31 +84,37 @@ class ClientHandler implements Runnable {
                     this.socket.close();
                     break;
                 } else if (clientCommand.startsWith("players")) {
-                    ArrayList<Entry<String, String>> updatedPlayers = new ArrayList<>();
+                    ArrayList<Player> updatedPlayers = new ArrayList<>();
                     while (tokens.hasMoreTokens()) {
                         String player = tokens.nextToken();
                         String[] info = player.split("\0");
-                        updatedPlayers.add(Map.entry(info[0], info[1]));
+                        updatedPlayers.add(
+                            new Player(info[1], info[0])
+                        );
                     }
-                    players.setPlayers(updatedPlayers);
+                    playersObservable.setPlayers(updatedPlayers);
                 } else if (clientCommand.startsWith("STARTING!")) {
                     tokens.nextToken(); // Players:
                     int amtOfPlayers = Integer.parseInt(tokens.nextToken());
                     tokens.nextToken(); // Host:
                     String host = tokens.nextToken();
                     System.out.println("Dealer is: " + host);
-                    ArrayList<Entry<String, String>> playerInfo = players.getPlayers();
+                    ArrayList<Player> playerInfo = playersObservable.getPlayers();
                     int dealerIndex = 0;
                     for (int i = 0; i < playerInfo.size(); i++) {
-                        if (playerInfo.get(i).getKey().contains(host)) {
+                        if (playerInfo.get(i).getHostName().contains(host)) {
                             dealerIndex = i;
                         }
                     }
-                    Entry firstToAct = playerInfo.get((dealerIndex + 2) % playerInfo.size());
+                    playerInfo.get(dealerIndex % playerInfo.size()).setRole("D"); // dealer
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB"); // small blind
+                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setRole("BB"); // big blind
+                    Player firstToAct = playerInfo.get((dealerIndex + 2) % playerInfo.size());
                     if (playerInfo.size() == 2) { // heads up game has different rules
-                        firstToAct = playerInfo.get((dealerIndex + 1) % playerInfo.size());
+                        playerInfo.get(dealerIndex).setRole("D/BB");
+                        playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
                     }
-                    players.setTurn(firstToAct);
+                    playersObservable.setTurn((dealerIndex + 1) % playerInfo.size());
                 } else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());
