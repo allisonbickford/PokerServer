@@ -10,6 +10,7 @@ public class Deck {
         for (Suit suit : Suit.values()) {
             for (int i = 1; i <= 13; i++) {
                 this.cards.push(new Card(i, suit));
+                System.out.print(i+" "+suit + " ");
             }
         }
         shuffle();

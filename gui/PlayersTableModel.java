@@ -9,18 +9,15 @@ import gui.CardCellRenderer;
 public class PlayersTableModel extends AbstractTableModel {
     public static final String[] columnHeaders = {"Player Name", "Money", "Cards", "Last Action"};
     public ArrayList<Player> players = new ArrayList<>();
-    public String turnHostName = "";
 
     /**
      * Default version UID
      */
     private static final long serialVersionUID = 1L;
 
-    public PlayersTableModel(ArrayList<Player> players, String currentTurnName) {
+    public PlayersTableModel(ArrayList<Player> players) {
         this.players = players;
-        this.turnHostName = currentTurnName;
     }
-
 
     @Override
     public int getRowCount() {
@@ -48,7 +45,8 @@ public class PlayersTableModel extends AbstractTableModel {
 
         switch (columnIndex) {
             case 0:
-                return player.getName();
+                // if player has role, show <Player> (Role), else show <Player>
+                return player.getRole() != "" ? player.getName() + " (" + player.getRole() + ")" : player.getName();
             case 1:
                 return "$" + player.getMoney();
             case 2:

@@ -5,9 +5,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
+
 import java.awt.event.*;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -19,126 +17,113 @@ import server.Player;
 import server.PlayersObservable;
 import game.*;
 
-public class GUI extends JFrame implements ActionListener, Observer {
-    JPanel gamePanel = new JPanel();
+public class GUI extends JFrame implements ActionListener, Observer  {
+    JPanel gamePanel;
     JPanel regPanel = new JPanel();
     JPanel lobbyPanel = new JPanel();
-    JPanel playerPanel = new JPanel();
     private ClientSession clientSession;
     private JLabel cHostName, cPort, username,regText;
     private JTextField cHostN_field,cPort_field,username_field;
     private JButton connect;
     private JTable playersTable;
+    private JLabel potLabel;
+    private PlayerPane myPanel;
     JFrame frame;
     PlayersObservable observable = null;
-    PlayersTableModel ptm;
-    private Card firstCard, secondCard;
-    private ImageIcon firstCardImg, secondCardImg;
-    private JLabel firstCardSlot, secondCardSlot;
-    private JTextField pot;
-    JButton checkBtn, betBtn, foldBtn;
-    private boolean check=false,fold=false,call=false;
-    private int bet = 0;
+    private String myName = "";
 
-    private Player cPlayer;
-    JScrollPane playersPane;
-    ArrayList<Player> playerInfo;
     public GUI() {
         super("Poker");
         initializeRegGUI();
     }
-    public void initializePlayerPanel(Card first, Card second){
-        this.firstCard = first;
-        this.secondCard = second;
-        playerPanel.setLayout(new GridBagLayout());
-        GridBagConstraints cons = new GridBagConstraints();
 
-        this.checkBtn = new JButton("Check");
-        this.betBtn = new JButton("Bet");
-        this.foldBtn = new JButton("Fold");
-        this.pot = new JTextField("POT:");
-
-        ArrayList<Player> playersList = this.observable.getPlayers();
-        for (Player player: playersList) {
-            if (player.getHostName().contains(this.clientSession.getHostName())) {
-                cPlayer = player;
-            }
-        }
-
-        // image shows number/suit
-        this.firstCardImg = new ImageIcon(getCardImage(firstCard));
-        this.secondCardImg = new ImageIcon(getCardImage(secondCard));
-
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 0;
-        cons.gridy = 0;
-        playerPanel.add(this.checkBtn, cons);
-
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 1;
-        cons.gridy = 0;
-        playerPanel.add(this.betBtn, cons);
-
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 2;
-        cons.gridy = 0;
-        playerPanel.add(this.foldBtn);
-
-        this.firstCardSlot = new JLabel(this.firstCardImg);
-        this.secondCardSlot = new JLabel(this.secondCardImg);
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 0;
-        cons.gridy = 1;
-        cons.gridwidth = 2;
-        playerPanel.add(this.firstCardSlot, cons);
-
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 1;
-        cons.gridy = 1;
-        cons.gridwidth = 2;
-
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.gridx = 3;
-        cons.gridy = 1;
-        cons.gridwidth = 2;
-        playerPanel.add(this.pot);
-        playerPanel.add(this.secondCardSlot, cons);
-        checkBtn.addActionListener(this);
-        betBtn.addActionListener(this);
-        foldBtn.addActionListener(this);
-        playerPanel.setBackground(new Color(12, 107, 17));
-    }
-    public void initializeGameGUI() {
+    public void initializeGameGUI() throws InterruptedException{
         frame.getContentPane().removeAll();
+        this.gamePanel = new JPanel();
         this.gamePanel.setBackground(new Color(12, 107, 17));
         this.gamePanel.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
-        Deck deck = new Deck();
-        playerInfo = this.observable.getPlayers();
-        
-        Card first = deck.draw();
-        Card second = deck.draw();
 
-        initializePlayerPanel(first, second); // TODO: don't draw for everyone, central deck?
+        ArrayList<Player> playerInfo = this.observable.getPlayers();
+
+        //System.out.println("here1" + playerInfo);
+/*
+        for (Player player: playerInfo) {
+            System.out.println(player.getRole());
+            if (player.getRole().contains("D")&& player.getHostName().contains(this.clientSession.getHostName())) {
+                System.out.println("here");
+                Deck deck = new Deck();
+                for (Player players : playerInfo) {
+                    if (players.getHostName().contains(this.clientSession.getHostName())) {
+                        continue;
+                    }
+                    first = deck.draw();
+                    second = deck.draw();
+                    this.clientSession.sendDeckMessage(first.rank(), first.suit(), second.rank(), second.suit(), players.getHostName());
+                }
+                Card dfirst = deck.draw();
+                Card dsecond = deck.draw();
+                for (int i = 0; i < playerInfo.size(); i++) {
+                    if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
+                        playerInfo.get(i).setCards(dfirst, dsecond);
+                        break;
+                    }
+                }
+            }
+        }
+        */
+
+      //  Card first = deck.draw();
+        //Card second = deck.draw();
+        //for (int i = 0; i < playerInfo.size(); i++) {
+          //  if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
+            //    playerInfo.get(i).setCards(first, second);
+              //  break;
+            //}
+       // }
+        Thread.sleep(20);
+        PlayersTableModel ptm = new PlayersTableModel(playerInfo);
+        this.playersTable = new JTable(ptm);
+        playersTable.setCellSelectionEnabled(false);
+        playersTable.setDefaultRenderer(CardCellRenderer.class, new CardCellRenderer());
+        playersTable.setPreferredScrollableViewportSize(new Dimension(600, 300));
+        playersTable.setRowHeight(75);
+        JScrollPane playersPane = new JScrollPane(this.playersTable);
+        playersPane.setPreferredSize(new Dimension(600, 300));
+        
+        cons.gridy = 0;
+        cons.gridheight = 3;
+        cons.gridwidth = 3;
+        this.gamePanel.add(playersPane, cons);
+        
+        cons.gridy = 4;
+        cons.gridx = 0;
+        cons.gridheight = 1;
+        cons.gridwidth = 1;
+        cons.anchor = GridBagConstraints.PAGE_START;
+        this.gamePanel.add(new JLabel("Me: " + this.myName), cons);
+        
+        this.potLabel = new JLabel("Pot: $0");
+        this.potLabel.setOpaque(true);
+        this.potLabel.setBackground(new Color(255, 255, 255));
+        cons.gridx = 2;
+        cons.gridy = 4;
+        cons.anchor = GridBagConstraints.PAGE_END;
+        this.gamePanel.add(potLabel, cons);
+        for (Player players: playerInfo) {
+            if(players.getHostName().contains(this.clientSession.getHostName())) {
+                Card[] hold = players.getCards();
+                Thread.sleep(20);
+                myPanel = new PlayerPane(hold[0],hold[1], this.clientSession);
+            }
+        }
+         // TODO: don't draw for everyone, central deck?
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.gridx = 0;
-        cons.gridy = 3;
+        cons.gridy = 5;
         cons.anchor = GridBagConstraints.PAGE_END;
         cons.gridwidth = 3;
-        this.gamePanel.add(playerPanel, cons);
-
-        ptm = new PlayersTableModel(playerInfo, observable.getTurn().getHostName());
-        this.playersTable = new JTable(ptm);
-        this.playersTable.setCellSelectionEnabled(false);
-        playersTable.setPreferredScrollableViewportSize(playersTable.getPreferredSize());
-        playersTable.setDefaultRenderer(CardCellRenderer.class, new CardCellRenderer());
-        playersTable.setRowHeight(75);
-        playersPane = new JScrollPane(this.playersTable);
-        playersPane.setPreferredSize(new Dimension(600, 300));
-
-        cons.gridy = 0;
-        cons.anchor = GridBagConstraints.PAGE_START;
-        this.gamePanel.add(playersPane, cons);
+        this.gamePanel.add(myPanel, cons);
         
         this.gamePanel.setPreferredSize(new Dimension(640, 480));
         frame.add(this.gamePanel);
@@ -146,22 +131,19 @@ public class GUI extends JFrame implements ActionListener, Observer {
         frame.setBackground(new Color(12, 107, 17));
         frame.pack();
         frame.setVisible(true);
-    }
 
-    public void updatePlayer(){
-        GridBagConstraints cons = new GridBagConstraints();
-        cons.gridx = 0;
-        cons.gridy = 0;
-        cons.anchor = GridBagConstraints.PAGE_START;
-        ptm = new PlayersTableModel(playerInfo, observable.getTurn().getHostName());
-        this.playersTable = new JTable(ptm);
-        this.playersTable.setCellSelectionEnabled(false);
-        playersTable.setPreferredScrollableViewportSize(playersTable.getPreferredSize());
-        playersTable.setDefaultRenderer(CardCellRenderer.class, new CardCellRenderer());
-        playersTable.setRowHeight(75);
-        playersPane = new JScrollPane(this.playersTable);
-        this.pot.setText("POT: "+ observable.getPot());
-        this.gamePanel.add(playersPane, cons);
+        for (int i = 0; i < playerInfo.size(); i++) {
+            if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
+                if (!playerInfo.get(i).isTurn()) {
+                    myPanel.stop();
+                } else {
+                    myPanel.actionAfterBet();
+                    myPanel.play();
+                }
+                this.observable.getPlayers().get(i).showCards();
+                break;
+            }
+        }
     }
 
     public void initializeRegGUI() {
@@ -182,7 +164,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
         GridBagConstraints regCons = new GridBagConstraints();
         frame = new JFrame();
         frame.setLayout(new GridBagLayout());
-        // frame.setBackground(new Color(12, 107, 17));
+    // frame.setBackground(new Color(12, 107, 17));
         regCons.fill = GridBagConstraints.HORIZONTAL;
         regCons.gridx = 1;
         regCons.gridy = 1;
@@ -220,7 +202,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
 
         this.add(this.regPanel);
         this.setBounds(200, 200, 640, 480);
-    //  this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    //    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     //  this.setVisible(true);
         
         frame.add(this.regPanel,regCons);
@@ -247,6 +229,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
                     );
                 } else {
                     try {
+                        this.myName = this.username_field.getText();
                         this.clientSession = new ClientSession(
                             this.username_field.getText(),
                             this.cHostN_field.getText()
@@ -274,85 +257,22 @@ public class GUI extends JFrame implements ActionListener, Observer {
                 this.username_field.setEditable(true);
                 this.connect.setText("Connect");
             }
-        } else if(pressed==checkBtn){
-            if( this.checkBtn.getText().equals("Check")) {
-                System.out.println("Check");
-                check = true;
-                cPlayer.setLastAction("Check");
-                clientSession.sendMessage("check: " + cPlayer.getName());
-
-            }else{
-                //call
-                if(cPlayer.getMoney() >= observable.getPot()){
-                    call=true;
-                    clientSession.sendMessage("call: " + cPlayer.getName());
-                }
-
-
-            }
-            actionAfterCheck();
-            updatePlayer();
-        }else if(pressed ==betBtn){
-            if(this.betBtn.getText().equals("Bet")) {
-                System.out.println("Bet");
-                try {
-                    bet = Integer.parseInt(JOptionPane.showInputDialog("How much do you want to bet?"));
-                    while ((cPlayer.getMoney() < bet)||observable.getPot()>bet) {
-                        bet = Integer.parseInt(JOptionPane.showInputDialog("You are too poor, bet again."));
-                    }
-                        observable.setPot(bet);
-                        cPlayer.setLastAction("Bet: $" + bet);
-                        clientSession.sendMessage("bet: " + cPlayer.getName() + " " + bet);
-                        this.pot.setText("POT: " + observable.getPot());
-                        actionAfterBet();
-
-                } catch (NumberFormatException nfe) {
-                    nfe.printStackTrace();
-                }
-                System.out.println("You have bet $" + bet);
-                updatePlayer();
-            }else{
-                //raise
-                System.out.println("Raise");
-                int hold=0;
-                try {
-                    hold = Integer.parseInt(JOptionPane.showInputDialog("How much do you want to raise?"));
-                    while ((cPlayer.getMoney() < bet)) {
-                        hold = Integer.parseInt(JOptionPane.showInputDialog("Not enough"));
-                    }
-                    if(hold>observable.getPot()){
-                        observable.setPot(hold);
-                        this.pot.setText("POT: "+ observable.getPot());
-                    }else{
-                        hold = Integer.parseInt(JOptionPane.showInputDialog("Not enough"));
-                    }
-                    cPlayer.setLastAction("Raise: $" + hold);
-                    //cPlayer.removeMoney(hold);
-                    clientSession.sendMessage("raise: "+cPlayer.getName()+" "+hold);
-                    updatePlayer();
-                }catch (NumberFormatException nfe) {
-                    nfe.printStackTrace();
-                }
-            }
-        }else if(pressed ==foldBtn){
-            System.out.println("Fold");
-            cPlayer.setLastAction("Fold");
-            clientSession.sendMessage("fold: "+cPlayer.getName());
-            updatePlayer();
-            fold = true;
         }
-
-
     }
 
     private void initializeLobbyGUI() {
         this.lobbyPanel.setBackground(new Color(12, 107, 17));
         frame.getContentPane().removeAll();
-        frame.setTitle("Poker Lobby " + this.clientSession.getHostName());
+        frame.setTitle("Poker Lobby");
+        
         JButton startButton = new JButton("Start Game!");
         startButton.addActionListener(e -> {
             this.clientSession.startGame();
+            try{
             initializeGameGUI();
+            }catch(InterruptedException de){
+                de.printStackTrace();
+            }
         });
         this.lobbyPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -397,85 +317,65 @@ public class GUI extends JFrame implements ActionListener, Observer {
     @Override
     public void update(Observable o, Object arg) {
         this.observable = ((PlayersObservable) o);
-        if (arg instanceof ArrayList) {
+        if (arg.toString().equals("players")) { // players change
             this.lobbyPanel.remove(0);
             JPanel playerLobby = playerLobby();
             this.lobbyPanel.add(playerLobby(), 0);
             frame.invalidate();
             frame.validate();
             frame.repaint();
-        } else if (arg instanceof Player) {
-            if (!this.gamePanel.isDisplayable()) {
-                initializeGameGUI();
+        } else if (arg.toString().equals("host")) { // game host changes
+            if (this.gamePanel == null) {
+                try{
+                    ArrayList<Player> playerInfo = this.observable.getPlayers();
+                    for (Player player: playerInfo) {
+                        if (player.getRole().contains("BB")&& player.getHostName().contains(this.clientSession.getHostName())) {
+                            Deck deck = new Deck();
+                            for (Player players : playerInfo) {
+                                if (players.getHostName().contains(this.clientSession.getHostName())) {
+                                    continue;
+                                }
+                                Card first = deck.draw();
+                                Card second = deck.draw();
+                                this.clientSession.sendDeckMessage(first.rank(), first.suit(), second.rank(), second.suit(), players.getHostName());
+                            }
+                            Card dfirst = deck.draw();
+                            Card dsecond = deck.draw();
+                            for (int i = 0; i < playerInfo.size(); i++) {
+                                if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
+                                    playerInfo.get(i).setCards(dfirst, dsecond);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    initializeGameGUI();
+                }catch(InterruptedException ede){
+                    ede.printStackTrace();
+                }
             }
-            System.out.println("Currently " + this.observable.getTurn().getName() + "'s Turn");
+        } else if (arg.toString().equals("lastAction")) { // turn changes
+            if (this.observable.getLastAction().getValue().toString().contains("Check")) {
+                myPanel.actionAfterCheck();
+            } else if (this.observable.getLastAction().getValue().toString().contains("Bet") ||
+                        this.observable.getLastAction().getValue().toString().contains("Call")) {
+                myPanel.actionAfterBet();
+            }
+            
+            int myIndex = 0;
+            for (int i = 0; i < this.observable.getPlayers().size(); i++) {
+                if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
+                    myIndex = i;
+                    break;
+                }
+            }
+            if (this.observable.getPlayers().get(myIndex).isTurn()) {
+                myPanel.play();
+            } else {
+                myPanel.stop();
+            }
+        } else if (arg.toString().equals("pot")) { // pot changes
+            potLabel.setText("Pot: $" + this.observable.getPot().toString());
         }
-    }
-    public boolean isCall() {
-        return call;
-    }
-    public void setCall(boolean call){
-        this.call = call;
-    }
-    public boolean isCheck() {
-        return check;
-    }
-
-    public boolean isFold() {
-        return fold;
-    }
-
-    public void setCheck(boolean check) {
-        this.check = check;
-    }
-
-    public void setFold(boolean fold){
-        this.fold = fold;
-    }
-
-    private Image getCardImage(Card card) {
-        int cardNumber = card.getNumber();
-        String cardLetter = card.getSuit().toString().substring(0,1);
-
-        try {
-            return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(75, 100, Image.SCALE_SMOOTH);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private Image cardBack() {
-        try {
-            return ImageIO.read(new File("./CardImages/purple_back.png")).getScaledInstance(75, 100, Image.SCALE_SMOOTH);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public void showCards() {
-        this.firstCardImg = new ImageIcon(getCardImage(this.firstCard));
-        this.secondCardImg = new ImageIcon(getCardImage(this.secondCard));
-    }
-
-    public void actionAfterBet() {
-        this.checkBtn.setText("Call");
-        this.betBtn.setText("Raise");
-    }
-
-    public void actionAfterCheck() {
-        this.checkBtn.setText("Check");
-        this.betBtn.setText("Bet");
-    }
-
-    public void play() {
-        this.checkBtn.setEnabled(true);
-        this.foldBtn.setEnabled(true);
-        this.betBtn.setEnabled(true);
-    }
-
-    public void stop() {
-        this.checkBtn.setEnabled(true);
-        this.foldBtn.setEnabled(true);
-        this.betBtn.setEnabled(true);
     }
 }

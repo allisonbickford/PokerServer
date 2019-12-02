@@ -10,6 +10,10 @@ public class Player {
     private String lastAction;
     private String role;
     private CardPanel cardPanel;
+    private boolean hasFolded;
+    private boolean isTurn;
+    private Card firstCard;
+    private Card secondCard;
 
 
     public Player(String name, String hostName) {
@@ -19,6 +23,8 @@ public class Player {
         this.lastAction = "";
         this.role = "";
         this.cardPanel = new CardPanel();
+        this.hasFolded = false;
+        this.isTurn = false;
     }
 
     public void addMoney(int money) {
@@ -37,8 +43,23 @@ public class Player {
         this.role = role;
     }
 
-    public void showCards(Card first, Card second) {
-        this.cardPanel.show(first, second);
+    public void setTurn(boolean turn) {
+        this.isTurn = turn;
+    }
+
+    public void setCards(Card first, Card second) {
+        firstCard = first;
+        secondCard = second;
+    }
+
+    public void showCards() {
+        if (firstCard != null && secondCard != null) {
+            this.cardPanel.show(firstCard, secondCard);
+        }
+    }
+
+    public void fold() {
+        this.hasFolded = true;
     }
 
     public String getName() {
@@ -64,4 +85,18 @@ public class Player {
     public CardPanel getPanel() {
         return this.cardPanel;
     }
+
+    public Card[] getCards() {
+        return new Card[]{firstCard, secondCard};
+    }
+
+    public boolean hasFolded() {
+        return this.hasFolded;
+    }
+
+    public boolean isTurn() {
+        return this.isTurn;
+    }
+
+
 }

@@ -16,7 +16,9 @@ public class CardCellRenderer implements TableCellRenderer {
         boolean isSelected, boolean hasFocus, int row, int column) {
 
             PlayersTableModel currentModel = (PlayersTableModel) table.getModel();
-            boolean currentTurn = currentModel.players.get(row).getHostName().contains(currentModel.turnHostName);
+            int index = row;
+            // if (index < 0) { index = currentModel.players.size() - 1; }
+            boolean currentTurn = currentModel.players.get(index).isTurn();
             if (column != 2) {
                 JLabel label = new JLabel(value.toString());
                 if (currentTurn) {
@@ -28,7 +30,7 @@ public class CardCellRenderer implements TableCellRenderer {
                 return label;
             }
             
-            this.panel = currentModel.players.get(row).getPanel();
+            this.panel = currentModel.players.get(index).getPanel();
             if (currentTurn) {
                 this.panel.setBackground(table.getSelectionBackground());
             } else {
