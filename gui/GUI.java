@@ -43,7 +43,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
         this.gamePanel.setBackground(new Color(12, 107, 17));
         this.gamePanel.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
-
+     //   Deck deck = new Deck();
         ArrayList<Player> playerInfo = this.observable.getPlayers();
 
         //System.out.println("here1" + playerInfo);
@@ -71,17 +71,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                 }
             }
         }
-        */
-
-      //  Card first = deck.draw();
-        //Card second = deck.draw();
-        //for (int i = 0; i < playerInfo.size(); i++) {
-          //  if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
-            //    playerInfo.get(i).setCards(first, second);
-              //  break;
-            //}
-       // }
-        Thread.sleep(20);
+        
         PlayersTableModel ptm = new PlayersTableModel(playerInfo);
         this.playersTable = new JTable(ptm);
         playersTable.setCellSelectionEnabled(false);
@@ -354,26 +344,40 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                     ede.printStackTrace();
                 }
             }
-        } else if (arg.toString().equals("lastAction")) { // turn changes
+        } else if (arg.toString().equals("action")) { // turn changes
+
+            int myIndex = 0;
+            int endOfRoundIndex = 0;
+            String turnHostName = "";
+            for (int i = 0; i < this.observable.getPlayers().size(); i++) {
+                if (this.observable.getPlayers().get(i).isTurn()) {
+                    turnHostName = this.observable.getPlayers().get(i).getHostName();
+                }
+                if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
+                    myIndex = i;
+                }
+                if (this.observable.getPlayers().size() > 2 && this.observable.getPlayers().get(i).getRole().contains("SB")) {
+                    endOfRoundIndex = i;
+                } else if (this.observable.getPlayers().size() == 2 && this.observable.getPlayers().get(i).getRole().contains("D")) {
+                    endOfRoundIndex = i;
+                }
+            }
+
             if (this.observable.getLastAction().getValue().toString().contains("Check")) {
                 myPanel.actionAfterCheck();
+            } else if (this.observable.getLastPlayerToBet().equals(turnHostName)) {
+                myPanel.actionAfterCheck();
+                this.observable.setLastPlayerToBet(this.observable.getPlayers().get(endOfRoundIndex).getHostName());
             } else if (this.observable.getLastAction().getValue().toString().contains("Bet") ||
                         this.observable.getLastAction().getValue().toString().contains("Call")) {
                 myPanel.actionAfterBet();
-            }
-            
-            int myIndex = 0;
-            for (int i = 0; i < this.observable.getPlayers().size(); i++) {
-                if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
-                    myIndex = i;
-                    break;
-                }
             }
             if (this.observable.getPlayers().get(myIndex).isTurn()) {
                 myPanel.play();
             } else {
                 myPanel.stop();
             }
+            ((PlayersTableModel) this.playersTable.getModel()).fireTableDataChanged();
         } else if (arg.toString().equals("pot")) { // pot changes
             potLabel.setText("Pot: $" + this.observable.getPot().toString());
         }

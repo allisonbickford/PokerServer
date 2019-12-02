@@ -104,7 +104,6 @@ class ClientHandler implements Runnable {
                     int dealerIndex = 0;
                     for (int i = 0; i < playerInfo.size(); i++) {
                         if (playerInfo.get(i).getHostName().contains(host)) {
-
                             dealerIndex = i;
                             break;
                         }
@@ -123,15 +122,35 @@ class ClientHandler implements Runnable {
                     playersObservable.setHost(host); // triggers start of game for gui
                     Thread.sleep(100); // trying to use the same thread?
                     playersObservable.setPot(3);
+                    Thread.sleep(100);
+                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
                 } else if (clientCommand.startsWith("action:")) {
                     String playerHost = tokens.nextToken(); // Host name of player that just acted
                     String action = tokens.nextToken(); // Bet, Check, Call, or Fold
+                    int playerIndex = 0;
+                    for (int i = 0; i < this.playersObservable.getPlayers().size(); i++) {
+                        if (this.playersObservable.getPlayers().get(i).getHostName().contains(playerHost)) {
+                            playerIndex = i;
+                            break;
+                        }
+                    }
                     if (action.equals("Bet")) {
                         String betAmount = tokens.nextToken(); // amount of $ bet
                         this.playersObservable.setLastAction(playerHost, action + " " + betAmount);
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action + " " + betAmount);
                         this.playersObservable.addToPot(Integer.parseInt(betAmount));
+                        this.playersObservable.setLastPlayerToBet(playerHost);
+                        this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(Integer.parseInt(betAmount));
+                    } else if (action.equals("Call")) {
+                        int amountToCall = this.playersObservable.getHighestBet() - this.playersObservable.getPlayers().get(playerIndex).getCurrentBet();
+                        this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(this.playersObservable.getHighestBet());
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
+                        this.playersObservable.addToPot(amountToCall);
+                        this.playersObservable.setLastPlayerToBet(playerHost);
+                        this.playersObservable.setLastAction(playerHost, action);
                     } else {
                         this.playersObservable.setLastAction(playerHost, action);
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
                     }
                     if(action.equals("Deck")){
                         ArrayList<Player> playerInfo = this.playersObservable.getPlayers();

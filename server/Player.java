@@ -14,6 +14,7 @@ public class Player {
     private boolean isTurn;
     private Card firstCard;
     private Card secondCard;
+    private int currentBet;
 
 
     public Player(String name, String hostName) {
@@ -24,6 +25,7 @@ public class Player {
         this.role = "";
         this.cardPanel = new CardPanel();
         this.hasFolded = false;
+        this.currentBet = 0;
         this.isTurn = false;
     }
 
@@ -62,6 +64,10 @@ public class Player {
         this.hasFolded = true;
     }
 
+    public void setCurrentBet(int bet) {
+        this.currentBet = bet;
+    }
+
     public String getName() {
         return this.name;
     }
@@ -98,5 +104,7 @@ public class Player {
         return this.isTurn;
     }
 
-
+    public int getCurrentBet() {
+        return this.currentBet;
+    }
 }
