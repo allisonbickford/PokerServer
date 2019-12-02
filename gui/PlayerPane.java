@@ -8,21 +8,39 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import game.*;
+import server.ClientSession;
 
 class PlayerPane extends JPanel {
     private Card firstCard, secondCard;
     private ImageIcon firstCardImg, secondCardImg;
     private JLabel firstCardSlot, secondCardSlot;
     private JButton checkBtn, betBtn, foldBtn;
+    private JSpinner betSpinner;
+    private ClientSession session;
 
-    public PlayerPane(Card firstCard, Card secondCard) {
+    public PlayerPane(Card firstCard, Card secondCard, ClientSession session) {
         this.firstCard = firstCard;
         this.secondCard = secondCard;
+        this.session = session;
         this.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
         this.checkBtn = new JButton("Check");
+        this.checkBtn.addActionListener(e -> {
+            if (((JButton) e.getSource()).getText().equals("Call")) {
+                int checkAmount = Integer.parseInt(
+                    session.getObservable().getLastAction().getValue().replaceAll("[^\\d.]", "") // remove "Bet " from action
+                );
+                session.sendBetMessage(checkAmount);
+            } else {
+                session.sendCheckMessage();
+            }
+        });
         this.betBtn = new JButton("Bet");
+        
         this.foldBtn = new JButton("Fold");
+        this.foldBtn.addActionListener(e -> {
+            this.session.sendFoldMessage();
+        });
         // image shows number/suit
         this.firstCardImg = new ImageIcon(getCardImage(firstCard));
         this.secondCardImg = new ImageIcon(getCardImage(secondCard));
@@ -32,9 +50,17 @@ class PlayerPane extends JPanel {
         cons.gridy = 0;
         this.add(this.checkBtn, cons);
 
-        cons.fill = GridBagConstraints.HORIZONTAL;
+        // TODO: min bets!
+        SpinnerNumberModel numberSpinnerModel = new SpinnerNumberModel(1, 1, 100, 1);
+        betSpinner = new JSpinner(numberSpinnerModel);
+        this.betBtn.addActionListener(e -> {
+            session.sendBetMessage(numberSpinnerModel.getNumber().intValue());
+        });
         cons.gridx = 1;
-        cons.gridy = 0;
+        this.add(betSpinner, cons);
+
+        cons.fill = GridBagConstraints.HORIZONTAL;
+        cons.gridy = 1;
         this.add(this.betBtn, cons);
 
         cons.fill = GridBagConstraints.HORIZONTAL;
@@ -46,13 +72,13 @@ class PlayerPane extends JPanel {
         this.secondCardSlot = new JLabel(this.secondCardImg);
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.gridx = 0;
-        cons.gridy = 1;
+        cons.gridy = 2;
         cons.gridwidth = 2;
         this.add(this.firstCardSlot, cons);
 
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.gridx = 1;
-        cons.gridy = 1;
+        cons.gridy = 2;
         cons.gridwidth = 2;
         this.add(this.secondCardSlot, cons);
 
@@ -101,8 +127,8 @@ class PlayerPane extends JPanel {
     }
 
     public void stop() {
-        this.checkBtn.setEnabled(true);
-        this.foldBtn.setEnabled(true);
-        this.betBtn.setEnabled(true);
+        this.checkBtn.setEnabled(false);
+        this.foldBtn.setEnabled(false);
+        this.betBtn.setEnabled(false);
     }
 }

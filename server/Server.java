@@ -26,7 +26,7 @@ class Server implements Runnable {
             while(true) {
                 Socket connectionSocket = welcomeSocket.accept();
                 System.out.println("Victim at: " + connectionSocket.getPort());
-                new Thread(new ClientHandler(connectionSocket, userName, playersObservable)).start();
+                new Thread(new ClientHandler(connectionSocket, userName, playersObservable, InetAddress.getLocalHost().getHostAddress() + ":" + this.port)).start();
             }
         } catch(Exception e) {
              e.printStackTrace();
@@ -46,11 +46,13 @@ class ClientHandler implements Runnable {
     private Socket socket;
     private String userName;
     private PlayersObservable playersObservable;
+    private String address;
 
-    public ClientHandler(Socket socket, String userName, PlayersObservable playersObservable) {
+    public ClientHandler(Socket socket, String userName, PlayersObservable playersObservable, String myAddress) {
         this.socket = socket;
         this.userName = userName;
         this.playersObservable = playersObservable;
+        this.address = myAddress;
     }
 
     @Override
@@ -94,8 +96,6 @@ class ClientHandler implements Runnable {
                     }
                     playersObservable.setPlayers(updatedPlayers);
                 } else if (clientCommand.startsWith("STARTING!")) {
-                    tokens.nextToken(); // Players:
-                    int amtOfPlayers = Integer.parseInt(tokens.nextToken());
                     tokens.nextToken(); // Host:
                     String host = tokens.nextToken();
                     System.out.println("Dealer is: " + host);
@@ -104,17 +104,33 @@ class ClientHandler implements Runnable {
                     for (int i = 0; i < playerInfo.size(); i++) {
                         if (playerInfo.get(i).getHostName().contains(host)) {
                             dealerIndex = i;
+                            break;
                         }
                     }
-                    playerInfo.get(dealerIndex % playerInfo.size()).setRole("D"); // dealer
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB"); // small blind
+                    playerInfo.get(dealerIndex).setRole("D"); // dealer
                     playerInfo.get((dealerIndex + 2) % playerInfo.size()).setRole("BB"); // big blind
-                    Player firstToAct = playerInfo.get((dealerIndex + 2) % playerInfo.size());
-                    if (playerInfo.size() == 2) { // heads up game has different rules
+                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setLastAction("Big Blind - $2"); // big blind
+                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).removeMoney(2); // put in big blind
+                    playerInfo.get((dealerIndex + 3) % playerInfo.size()).setTurn(true);
+                    if (playerInfo.size() == 2) {
                         playerInfo.get(dealerIndex).setRole("D/BB");
-                        playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
                     }
-                    playersObservable.setTurn((dealerIndex + 1) % playerInfo.size());
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Small Blind - $1");
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).removeMoney(1); // put in small blind
+                    playersObservable.setHost(host); // triggers start of game for gui
+                    Thread.sleep(100); // trying to use the same thread?
+                    playersObservable.setPot(3);
+                } else if (clientCommand.startsWith("action:")) {
+                    String playerHost = tokens.nextToken(); // Host name of player that just acted
+                    String action = tokens.nextToken(); // Bet, Check, Call, or Fold
+                    if (action.equals("Bet")) {
+                        String betAmount = tokens.nextToken(); // amount of $ bet
+                        this.playersObservable.setLastAction(playerHost, action + " " + betAmount);
+                        this.playersObservable.addToPot(Integer.parseInt(betAmount));
+                    } else {
+                        this.playersObservable.setLastAction(playerHost, action);
+                    }
                 } else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());

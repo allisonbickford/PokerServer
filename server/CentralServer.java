@@ -170,7 +170,7 @@ class SubServerHandler implements Runnable {
                     break;
                 } else if (clientCommand.startsWith("start")) {
                     CentralServer.startGame(commands[1]);
-                    CentralServer.broadcast(this.socket.getPort() + " STARTING! Players: " + CentralServer.getNumberOfPlayers() + " Host: " + commands[1]);
+                    CentralServer.broadcast(this.socket.getPort() + " STARTING! Host: " + commands[1]);
                 } else if (clientCommand.startsWith("quit")) {
                     if (commands[1] == CentralServer.getGameHost()) {
                         CentralServer.endGame();
