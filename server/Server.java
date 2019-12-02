@@ -124,7 +124,30 @@ class ClientHandler implements Runnable {
                     playersObservable.setPot(3);
                     Thread.sleep(100);
                     playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
-                } else if (clientCommand.startsWith("action:")) {
+                }else if(clientCommand.startsWith("deck:")) {
+                    String playerHost = tokens.nextToken(); // Host name of player that just acted
+                    String action = tokens.nextToken(); // Bet, Check, Call, or Fold
+                    if (action.equals("Deck")) {
+                        ArrayList<Player> playerInfo = this.playersObservable.getPlayers();
+                        //  String playersHost = tokens.nextToken();
+                        int card1 = Integer.parseInt(tokens.nextToken());
+                        int suit1 = Integer.parseInt(tokens.nextToken());
+                        int card2 = Integer.parseInt(tokens.nextToken());
+                        int suit2 = Integer.parseInt(tokens.nextToken());
+                        System.out.println("cards: " + card1 + " " + suit1 + " " + card2 + " " + suit2);
+                        String sendToHost = tokens.nextToken();
+                        //  Deck deck = new Deck();
+                        for (Player player : playerInfo) {
+                            if (player.getHostName().contains(sendToHost)) {
+                                System.out.println("cards: " + sendToHost + " " + card1 + " " + suit1 + " " + card2 + " " + suit2);
+                                Card first = new Card(suit1, card1);
+                                Card second = new Card(suit2, card2);
+                                player.setCards(first, second);
+                            }
+                        }
+                    }
+                }
+                else if (clientCommand.startsWith("action:")) {
                     String playerHost = tokens.nextToken(); // Host name of player that just acted
                     String action = tokens.nextToken(); // Bet, Check, Call, or Fold
                     int playerIndex = 0;
@@ -152,25 +175,7 @@ class ClientHandler implements Runnable {
                         this.playersObservable.setLastAction(playerHost, action);
                         this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
                     }
-                    if(action.equals("Deck")){
-                        ArrayList<Player> playerInfo = this.playersObservable.getPlayers();
-                      //  String playersHost = tokens.nextToken();
-                        int card1 = Integer.parseInt(tokens.nextToken());
-                        int suit1 =  Integer.parseInt(tokens.nextToken());
-                        int card2 =  Integer.parseInt(tokens.nextToken());
-                        int suit2 =  Integer.parseInt(tokens.nextToken());
-                        System.out.println("cards: " + card1 +" "+suit1 +" "+card2 +" "+suit2);
-                        String sendToHost = tokens.nextToken();
-                        //  Deck deck = new Deck();
-                        for (Player player: playerInfo) {
-                            if (player.getHostName().contains(sendToHost)) {
-                                System.out.println("cards: "+ sendToHost+" " + card1 +" "+suit1 +" "+card2 +" "+suit2);
-                               Card first = new Card(suit1,card1);
-                               Card second= new Card(suit2,card2);
-                               player.setCards(first,second);
-                            }
-                        }
-                    }
+
                 } else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());

@@ -45,7 +45,6 @@ public class GUI extends JFrame implements ActionListener, Observer  {
         GridBagConstraints cons = new GridBagConstraints();
      //   Deck deck = new Deck();
         ArrayList<Player> playerInfo = this.observable.getPlayers();
-
         //System.out.println("here1" + playerInfo);
 /*
         for (Player player: playerInfo) {
@@ -71,7 +70,8 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                 }
             }
         }
-        
+        */
+        Thread.sleep(20);
         PlayersTableModel ptm = new PlayersTableModel(playerInfo);
         this.playersTable = new JTable(ptm);
         playersTable.setCellSelectionEnabled(false);
@@ -372,6 +372,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                         this.observable.getLastAction().getValue().toString().contains("Call")) {
                 myPanel.actionAfterBet();
             }
+
             if (this.observable.getPlayers().get(myIndex).isTurn()) {
                 myPanel.play();
             } else {

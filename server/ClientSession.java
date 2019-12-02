@@ -113,7 +113,7 @@ public class ClientSession {
     public void sendDeckMessage(int card1,int suit1,int card2,int suit2,String hostName){
         this.mutablePort += 7;
         String gameHost = this.server.getObservable().getHost();
-        String message = String.format("%d action: %s Deck %d %d %d %d %s \n", this.mutablePort, this.getHostName(),card1,suit2,card2,suit2,hostName);
+        String message = String.format("%d deck: %s Deck %d %d %d %d %s \n", this.mutablePort, this.getHostName(),card1,suit2,card2,suit2,hostName);
         System.out.println(message);
         broadcastDeck(message);
     }
