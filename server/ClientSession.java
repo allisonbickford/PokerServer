@@ -55,7 +55,16 @@ public class ClientSession {
     public PlayersObservable getObservable() {
         return this.server.getObservable();
     }
+    public void sendMessage(String message){
+            try {
+                System.out.println("Talking to central..." +" " +message);
+                DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
+                centralDOS.writeBytes(message);
 
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+    }
     //closes client session
     public void close() {
         if (this.controlSocket != null) {

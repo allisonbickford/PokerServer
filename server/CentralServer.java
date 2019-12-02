@@ -186,6 +186,12 @@ class SubServerHandler implements Runnable {
                         playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
                     }
                     CentralServer.broadcast(playerMessage);
+                }else if(clientCommand.startsWith("bet:")){
+                    //1 = user 2 == bet amount
+                    System.out.println("New bet from: " + commands[1] +"for $"+ commands[2]);
+
+                    String message = commands[1] + " " + commands[2];
+                    CentralServer.broadcast(message);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
