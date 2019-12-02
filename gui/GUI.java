@@ -319,7 +319,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                 try{
                     ArrayList<Player> playerInfo = this.observable.getPlayers();
                     for (Player player: playerInfo) {
-                        if (player.getRole().contains("BB")&& player.getHostName().contains(this.clientSession.getHostName())) {
+                        if (player.getRole().contains("SB")&& player.getHostName().contains(this.clientSession.getHostName())) {
                             Deck deck = new Deck();
                             for (Player players : playerInfo) {
                                 if (players.getHostName().contains(this.clientSession.getHostName())) {

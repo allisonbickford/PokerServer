@@ -10,7 +10,6 @@ public class Deck {
         for (int j = 1; j <=4; j++) {
             for (int i = 1; i <= 13; i++) {
                 this.cards.push(new Card(j,i));
-                //System.out.println(cards.toString());
             }
         }
         shuffle();
@@ -19,7 +18,6 @@ public class Deck {
     public void shuffle() {
         Collections.shuffle(this.cards);
     }
-
     public Card draw() {
         return this.cards.pop();
     }
