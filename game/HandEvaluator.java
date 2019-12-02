@@ -1,3 +1,5 @@
+package game;
+
 /* --------------------------------------------------------------
    Contains method to evaluate the strength of Poker hands
 
