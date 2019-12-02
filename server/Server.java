@@ -115,7 +115,79 @@ class ClientHandler implements Runnable {
                         playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
                     }
                     playersObservable.setTurn((dealerIndex + 1) % playerInfo.size());
-                } else {
+                }
+                else if(clientCommand.startsWith("bet")){
+                    //tokens.nextToken(); //username
+                    String username = tokens.nextToken(); //username
+                    //tokens.nextToken(); //bet ammount
+                    int betAmt = Integer.parseInt(tokens.nextToken());
+                    System.out.println("server: "+username+ "bet: $" + betAmt);
+                    ArrayList<Player> playersList = playersObservable.getPlayers();
+                    for (Player player: playersList) {
+                        if (player.getName().contains(username)) {
+                            player.removeMoney(betAmt);
+                            player.setLastAction("Bet $" + betAmt);
+                            playersObservable.setPot(betAmt);
+                        }
+                    }
+                }
+                else if(clientCommand.startsWith("raise")){
+                    //tokens.nextToken(); //username
+                    String username = tokens.nextToken(); //username
+                    //tokens.nextToken(); //bet ammount
+                    int raiseAmt = Integer.parseInt(tokens.nextToken());
+                  //  System.out.println("server: "+username+ "bet: $" + raiseAmt);
+                    ArrayList<Player> playersList = playersObservable.getPlayers();
+                    for (Player player: playersList) {
+                        if (player.getName().contains(username)) {
+                            player.removeMoney(raiseAmt);
+                            player.setLastAction("Raised $" + raiseAmt);
+                            playersObservable.setPot(raiseAmt);
+                        }
+                    }
+                }
+                else if(clientCommand.startsWith("check")){
+                    //tokens.nextToken(); //username
+                    String username = tokens.nextToken(); //username
+                   // System.out.println("server: "+username+ "check" + raiseAmt);
+                    ArrayList<Player> playersList = playersObservable.getPlayers();
+                    for (Player player: playersList) {
+                        if (player.getName().contains(username)) {
+                          //  player.removeMoney(raiseAmt);
+                            player.setLastAction("Check");
+                            //Todo: set next turn
+                          //  playersObservable.setTurn(playersObservable.getTurn()+1);
+                        }
+                    }
+                } else if(clientCommand.startsWith("call")){
+                    //tokens.nextToken(); //username
+                    String username = tokens.nextToken(); //username
+                    // System.out.println("server: "+username+ "check" + raiseAmt);
+                    ArrayList<Player> playersList = playersObservable.getPlayers();
+                    for (Player player: playersList) {
+                        if (player.getName().contains(username)) {
+                            //  player.removeMoney(raiseAmt);
+                            player.setLastAction("call");
+
+                            //Todo: raise to highest bet
+
+                        }
+                    }
+                }else if(clientCommand.startsWith("fold")){
+                    //tokens.nextToken(); //username
+                    String username = tokens.nextToken(); //username
+                    // System.out.println("server: "+username+ "check" + raiseAmt);
+                    ArrayList<Player> playersList = playersObservable.getPlayers();
+                    for (Player player: playersList) {
+                        if (player.getName().contains(username)) {
+                            //  player.removeMoney(raiseAmt);
+                            player.setLastAction("Fold");
+                            //Todo: set next turn
+                            //  playersObservable.setTurn(playersObservable.getTurn()+1);
+                        }
+                    }
+                }
+                else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());
 

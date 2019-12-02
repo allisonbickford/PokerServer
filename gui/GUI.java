@@ -39,7 +39,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
     JButton checkBtn, betBtn, foldBtn;
     private boolean check=false,fold=false,call=false;
     private int bet = 0;
-    //   private ClientSession cs;
+
     private Player cPlayer;
     JScrollPane playersPane;
     ArrayList<Player> playerInfo;
@@ -52,10 +52,10 @@ public class GUI extends JFrame implements ActionListener, Observer {
         this.secondCard = second;
         playerPanel.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
+
         this.checkBtn = new JButton("Check");
         this.betBtn = new JButton("Bet");
         this.foldBtn = new JButton("Fold");
-
         this.pot = new JTextField("POT:");
 
         ArrayList<Player> playersList = this.observable.getPlayers();
@@ -160,6 +160,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
         playersTable.setDefaultRenderer(CardCellRenderer.class, new CardCellRenderer());
         playersTable.setRowHeight(75);
         playersPane = new JScrollPane(this.playersTable);
+        this.pot.setText("POT: "+ observable.getPot());
         this.gamePanel.add(playersPane, cons);
     }
 
@@ -277,14 +278,17 @@ public class GUI extends JFrame implements ActionListener, Observer {
             if( this.checkBtn.getText().equals("Check")) {
                 System.out.println("Check");
                 check = true;
-
                 cPlayer.setLastAction("Check");
-                initializeGameGUI();
+                clientSession.sendMessage("check: " + cPlayer.getName());
+
             }else{
                 //call
                 if(cPlayer.getMoney() >= observable.getPot()){
                     call=true;
+                    clientSession.sendMessage("call: " + cPlayer.getName());
                 }
+
+
             }
             actionAfterCheck();
             updatePlayer();
@@ -293,15 +297,15 @@ public class GUI extends JFrame implements ActionListener, Observer {
                 System.out.println("Bet");
                 try {
                     bet = Integer.parseInt(JOptionPane.showInputDialog("How much do you want to bet?"));
-                    while (cPlayer.getMoney() < bet) {
+                    while ((cPlayer.getMoney() < bet)||observable.getPot()>bet) {
                         bet = Integer.parseInt(JOptionPane.showInputDialog("You are too poor, bet again."));
                     }
-                    cPlayer.removeMoney(bet); //should do that after round
-                    observable.setPot(bet);
-                    cPlayer.setLastAction("Bet: $" +bet);
-                    clientSession.sendMessage("bet: "+cPlayer.getName()+" "+bet);
-                    this.pot.setText("POT: "+ bet);
-                    actionAfterBet();
+                        observable.setPot(bet);
+                        cPlayer.setLastAction("Bet: $" + bet);
+                        clientSession.sendMessage("bet: " + cPlayer.getName() + " " + bet);
+                        this.pot.setText("POT: " + observable.getPot());
+                        actionAfterBet();
+
                 } catch (NumberFormatException nfe) {
                     nfe.printStackTrace();
                 }
@@ -312,18 +316,19 @@ public class GUI extends JFrame implements ActionListener, Observer {
                 System.out.println("Raise");
                 int hold=0;
                 try {
-                    hold = Integer.parseInt(JOptionPane.showInputDialog("How much do you want to bet?"));
+                    hold = Integer.parseInt(JOptionPane.showInputDialog("How much do you want to raise?"));
                     while ((cPlayer.getMoney() < bet)) {
                         hold = Integer.parseInt(JOptionPane.showInputDialog("Not enough"));
                     }
                     if(hold>observable.getPot()){
                         observable.setPot(hold);
-                        this.pot.setText("POT: "+ hold);
+                        this.pot.setText("POT: "+ observable.getPot());
                     }else{
                         hold = Integer.parseInt(JOptionPane.showInputDialog("Not enough"));
                     }
                     cPlayer.setLastAction("Raise: $" + hold);
-                    cPlayer.removeMoney(hold);
+                    //cPlayer.removeMoney(hold);
+                    clientSession.sendMessage("raise: "+cPlayer.getName()+" "+hold);
                     updatePlayer();
                 }catch (NumberFormatException nfe) {
                     nfe.printStackTrace();
@@ -332,6 +337,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
         }else if(pressed ==foldBtn){
             System.out.println("Fold");
             cPlayer.setLastAction("Fold");
+            clientSession.sendMessage("fold: "+cPlayer.getName());
             updatePlayer();
             fold = true;
         }

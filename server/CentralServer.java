@@ -188,9 +188,29 @@ class SubServerHandler implements Runnable {
                     CentralServer.broadcast(playerMessage);
                 }else if(clientCommand.startsWith("bet:")){
                     //1 = user 2 == bet amount
-                    System.out.println("New bet from: " + commands[1] +"for $"+ commands[2]);
-
-                    String message = commands[1] + " " + commands[2];
+                    System.out.println("New bet from: " + commands[1] +" for $"+ commands[2]);
+                    String message = this.socket.getPort() +" bet " + commands[1] + " " + commands[2];
+                    CentralServer.broadcast(message);
+                }else if(clientCommand.startsWith("raise:")){
+                    //1 = user 2 == bet amount
+                    System.out.println("New raise from: " + commands[1] +" for $"+ commands[2]);
+                    String message = this.socket.getPort() +" raise " + commands[1] + " " + commands[2];
+                    CentralServer.broadcast(message);
+                }
+                else if(clientCommand.startsWith("check:")){
+                    //1 = user 2 == bet amount
+                    System.out.println("Check from: " + commands[1]);
+                    String message = this.socket.getPort() +" check " + commands[1];
+                    CentralServer.broadcast(message);
+                }else if(clientCommand.startsWith("call:")){
+                    //1 = user 2 == bet amount
+                    System.out.println("call from: " + commands[1]);
+                    String message = this.socket.getPort() +" call " + commands[1];
+                    CentralServer.broadcast(message);
+                }else if(clientCommand.startsWith("fold:")){
+                    //1 = user 2 == bet amount
+                    System.out.println("fold from: " + commands[1]);
+                    String message = this.socket.getPort() +" fold " + commands[1];
                     CentralServer.broadcast(message);
                 }
             } catch (Exception e) {

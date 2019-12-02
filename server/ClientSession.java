@@ -59,7 +59,7 @@ public class ClientSession {
             try {
                 System.out.println("Talking to central..." +" " +message);
                 DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
-                centralDOS.writeBytes(message);
+                centralDOS.writeBytes(message+"\n");
 
             } catch (Exception e) {
                 e.printStackTrace();
