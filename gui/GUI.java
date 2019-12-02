@@ -280,38 +280,52 @@ public class GUI extends JFrame implements ActionListener, Observer {
     @Override
     public void update(Observable o, Object arg) {
         this.observable = ((PlayersObservable) o);
-        if (arg instanceof ArrayList) { // players change
+        if (arg.toString().equals("players")) { // players change
             this.lobbyPanel.remove(0);
             JPanel playerLobby = playerLobby();
             this.lobbyPanel.add(playerLobby(), 0);
             frame.invalidate();
             frame.validate();
             frame.repaint();
-        } else if (arg instanceof String) { // game host changes
+        } else if (arg.toString().equals("host")) { // game host changes
             if (this.gamePanel == null) {
                 initializeGameGUI();
             }
-        } else if (arg instanceof Entry) { // turn changes
-            if (((Entry) arg).getValue().toString().contains("Check")) {
-                myPanel.actionAfterCheck();
-            } else if (((Entry) arg).getValue().toString().contains("Bet") ||
-                        ((Entry) arg).getValue().toString().contains("Call")) {
-                myPanel.actionAfterBet();
-            }
-            
+        } else if (arg.toString().equals("action")) { // turn changes
+                        
             int myIndex = 0;
+            int endOfRoundIndex = 0;
+            String turnHostName = "";
             for (int i = 0; i < this.observable.getPlayers().size(); i++) {
+                if (this.observable.getPlayers().get(i).isTurn()) {
+                    turnHostName = this.observable.getPlayers().get(i).getHostName();
+                }
                 if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
                     myIndex = i;
-                    break;
                 }
+                if (this.observable.getPlayers().size() > 2 && this.observable.getPlayers().get(i).getRole().contains("SB")) {
+                    endOfRoundIndex = i;
+                } else if (this.observable.getPlayers().size() == 2 && this.observable.getPlayers().get(i).getRole().contains("D")) {
+                    endOfRoundIndex = i;
+                }
+            }
+
+            if (this.observable.getLastAction().getValue().toString().contains("Check")) {
+                myPanel.actionAfterCheck();
+            } else if (this.observable.getLastPlayerToBet().equals(turnHostName)) {
+                myPanel.actionAfterCheck();
+                this.observable.setLastPlayerToBet(this.observable.getPlayers().get(endOfRoundIndex).getHostName());
+            } else if (this.observable.getLastAction().getValue().toString().contains("Bet") ||
+                        this.observable.getLastAction().getValue().toString().contains("Call")) {
+                myPanel.actionAfterBet();
             }
             if (this.observable.getPlayers().get(myIndex).isTurn()) {
                 myPanel.play();
             } else {
                 myPanel.stop();
             }
-        } else if (arg instanceof Integer) { // pot changes
+            ((PlayersTableModel) this.playersTable.getModel()).fireTableDataChanged();
+        } else if (arg.toString().equals("pot")) { // pot changes
             potLabel.setText("Pot: $" + this.observable.getPot().toString());
         }
     }
