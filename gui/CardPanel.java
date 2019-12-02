@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import javax.imageio.ImageIO;
-
 import game.Card;
 
 public class CardPanel extends JPanel {
