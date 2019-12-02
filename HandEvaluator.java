@@ -10,7 +10,7 @@
      An integer value represent the strength
      The higher the integer, the stronger the hand
    -------------------------------------------------------------- */
-public class Poker
+public class HandEvaluator
 {
    public static final int STRAIGHT_FLUSH = 8000000; 
                                              // + valueHighCard()
