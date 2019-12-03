@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import game.Deck;
+import game.Card;
 
 class Server implements Runnable {
     public int port;
@@ -20,13 +21,13 @@ class Server implements Runnable {
 
     public void run() {
         try {
-            address = InetAddress.getLocalHost().getHostAddress();
-            ServerSocket welcomeSocket = new ServerSocket(this.port, 0, InetAddress.getLocalHost());
+            address = InetAddress.getLoopbackAddress().getHostAddress();
+            ServerSocket welcomeSocket = new ServerSocket(this.port, 0, InetAddress.getLoopbackAddress());
             System.out.println("Listening at " + welcomeSocket.getInetAddress() + ":" + port);
             while(true) {
                 Socket connectionSocket = welcomeSocket.accept();
                 System.out.println("Victim at: " + connectionSocket.getPort());
-                new Thread(new ClientHandler(connectionSocket, userName, playersObservable, InetAddress.getLocalHost().getHostAddress() + ":" + this.port)).start();
+                new Thread(new ClientHandler(connectionSocket, userName, playersObservable, InetAddress.getLoopbackAddress().getHostAddress() + ":" + this.port)).start();
             }
         } catch(Exception e) {
              e.printStackTrace();
@@ -121,16 +122,105 @@ class ClientHandler implements Runnable {
                     playersObservable.setHost(host); // triggers start of game for gui
                     Thread.sleep(100); // trying to use the same thread?
                     playersObservable.setPot(3);
-                } else if (clientCommand.startsWith("action:")) {
+                    Thread.sleep(100);
+                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
+                }else if(clientCommand.startsWith("deck:")) {
                     String playerHost = tokens.nextToken(); // Host name of player that just acted
                     String action = tokens.nextToken(); // Bet, Check, Call, or Fold
+                    if (action.equals("Deck")) {
+                        ArrayList<Player> playerInfo = this.playersObservable.getPlayers();
+                        //  String playersHost = tokens.nextToken();
+                        int card1 = Integer.parseInt(tokens.nextToken());
+                        int suit1 = Integer.parseInt(tokens.nextToken());
+                        int card2 = Integer.parseInt(tokens.nextToken());
+                        int suit2 = Integer.parseInt(tokens.nextToken());
+                        System.out.println("cards: " + card1 + " " + suit1 + " " + card2 + " " + suit2);
+                        String sendToHost = tokens.nextToken();
+                        //  Deck deck = new Deck();
+                        for (Player player : playerInfo) {
+                            if (player.getHostName().contains(sendToHost)) {
+                                System.out.println("cards: " + sendToHost + " " + card1 + " " + suit1 + " " + card2 + " " + suit2);
+                                Card first = new Card(suit1, card1);
+                                Card second = new Card(suit2, card2);
+                                player.setCards(first, second);
+                            }
+                        }
+                    }
+                }
+                else if(clientCommand.startsWith("endPhase")){
+                    ArrayList<Player> playerInfo = playersObservable.getPlayers();
+                    int dealerIndex = 0;
+                    for (int i = 0; i < playerInfo.size(); i++) {
+                        if (playerInfo.get(i).getRole().equals("D")) {
+                            dealerIndex = i;
+                            break;
+                        }
+                    }
+                    this.playersObservable.setLastPlayerToBet("");
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Check");
+                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
+                }
+                else if(clientCommand.startsWith("endRound")){
+                    //TODO: DO we need logic regarding earnings here?
+
+                    ArrayList<Player> playerInfo = playersObservable.getPlayers();
+                    int dealerIndex = 0;
+
+                    for (int i = 0; i < playerInfo.size(); i++) {
+                        if (playerInfo.get(i).getRole().equals("D")) {
+                            dealerIndex = i +1;
+                            break;
+                        }
+                    }
+                    String dealer = playerInfo.get(dealerIndex).getHostName();
+                    System.out.println("Dealer is: " + dealer);
+
+                    playerInfo.get(dealerIndex).setRole("D"); // dealer
+                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setRole("BB"); // big blind
+                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setLastAction("Big Blind - $2"); // big blind
+                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).removeMoney(2); // put in big blind
+                    playerInfo.get((dealerIndex + 3) % playerInfo.size()).setTurn(true);
+                    if (playerInfo.size() == 2) {
+                        playerInfo.get(dealerIndex).setRole("D/BB");
+                    }
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Small Blind - $1");
+                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).removeMoney(1); // put in small blind
+                    Thread.sleep(100); // trying to use the same thread?
+                    playersObservable.setPot(3);
+                    Thread.sleep(100);
+                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
+                }
+
+                else if (clientCommand.startsWith("action:")) {
+                    String playerHost = tokens.nextToken(); // Host name of player that just acted
+                    String action = tokens.nextToken(); // Bet, Check, Call, or Fold
+                    int playerIndex = 0;
+                    for (int i = 0; i < this.playersObservable.getPlayers().size(); i++) {
+                        if (this.playersObservable.getPlayers().get(i).getHostName().contains(playerHost)) {
+                            playerIndex = i;
+                            break;
+                        }
+                    }
                     if (action.equals("Bet")) {
                         String betAmount = tokens.nextToken(); // amount of $ bet
                         this.playersObservable.setLastAction(playerHost, action + " " + betAmount);
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action + " " + betAmount);
                         this.playersObservable.addToPot(Integer.parseInt(betAmount));
+                        this.playersObservable.setLastPlayerToBet(playerHost);
+                        this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(Integer.parseInt(betAmount));
+                    } else if (action.equals("Call")) {
+                        int amountToCall = this.playersObservable.getHighestBet() - this.playersObservable.getPlayers().get(playerIndex).getCurrentBet();
+                        this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(this.playersObservable.getHighestBet());
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
+                        this.playersObservable.addToPot(amountToCall);
+                        this.playersObservable.setLastPlayerToBet(playerHost);
+                        this.playersObservable.setLastAction(playerHost, action);
                     } else {
                         this.playersObservable.setLastAction(playerHost, action);
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
                     }
+
                 } else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());

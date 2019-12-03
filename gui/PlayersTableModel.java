@@ -1,12 +1,14 @@
 package gui;
 
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.event.TableModelEvent;
 import java.util.ArrayList;
 
 import server.Player;
 import gui.CardCellRenderer;
 
-public class PlayersTableModel extends AbstractTableModel {
+public class PlayersTableModel extends AbstractTableModel implements TableModelListener {
     public static final String[] columnHeaders = {"Player Name", "Money", "Cards", "Last Action"};
     public ArrayList<Player> players = new ArrayList<>();
 
@@ -17,6 +19,7 @@ public class PlayersTableModel extends AbstractTableModel {
 
     public PlayersTableModel(ArrayList<Player> players) {
         this.players = players;
+        this.addTableModelListener(this);
     }
 
     @Override
@@ -60,5 +63,15 @@ public class PlayersTableModel extends AbstractTableModel {
     @Override
     public boolean isCellEditable(int i, int i1) {
         return false;
+    }
+
+    public void tableChanged(TableModelEvent e) {
+        int row = e.getFirstRow();
+
+        for (int i = 0; i < this.players.size(); i++) {
+            // System.out.println(this.players.get(i).getLastAction());
+            this.setValueAt(this.players.get(i).getLastAction(), row, 3);
+        }
+
     }
 }

@@ -2,8 +2,11 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
+import java.io.IOException;
 import javax.imageio.ImageIO;
+
 import game.Card;
 
 public class CardPanel extends JPanel {
@@ -30,19 +33,7 @@ public class CardPanel extends JPanel {
 
     private Image getCardImage(Card card) {
         int cardNumber = card.rank();
-        String suitnumber = Integer.toString(card.suit());
-        String cardLetter = "";
-
-        switch(suitnumber){
-            case "1":
-                cardLetter = "D";
-            case "2":
-                cardLetter = "H";
-            case "3":
-                cardLetter = "C";
-            case "4":
-                cardLetter = "S";
-        }
+        String cardLetter = card.suitStr().toString().substring(0,1);
 
         try {
             return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(45, 70, Image.SCALE_SMOOTH);
