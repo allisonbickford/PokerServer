@@ -22,7 +22,7 @@ public class ClientSession {
         try {
             //connects to central server
             this.centralSocket = new Socket(centralAddress, 1200);
-            this.address = InetAddress.getLocalHost().getHostAddress();
+            this.address = InetAddress.getLoopbackAddress().getHostAddress();
             this.port = this.centralSocket.getLocalPort();
             this.mutablePort = this.port + 7;
             String connMessage = String.format("newuser: %s %s:%d \n", username, this.address, this.port);
@@ -84,20 +84,9 @@ public class ClientSession {
         String message = String.format("%d action: %s Check\n", this.mutablePort, this.getHostName());
         broadcast(message);
         this.getObservable().setLastAction(this.getHostName(), "Check");
-        // if (gameHost.equals(this.getHostName())) {
-        // } else {
-        //     String[] hostInfo = gameHost.split(":");
-        //     Socket p2pSocket = new Socket(hostInfo[0], Integer.parseInt(hostInfo[1]));
-        //     DataOutputStream dos = new DataOutputStream(p2pSocket.getOutputStream());
-        //     dos.writeBytes(message);
-        //     dos.flush();
-        //     dos.close();
-        //     p2pSocket.close();
-        // }
     }
 
     public void sendBetMessage(int amount) {
-        System.out.println("bet amount = " + amount);
         int myIndex = 0;
         for (int i = 0; i < this.getObservable().getPlayers().size(); i++) {
             if (this.getObservable().getPlayers().get(i).getHostName().equals(this.getHostName())) {
@@ -117,18 +106,9 @@ public class ClientSession {
             this.getObservable().setLastAction(this.getHostName(), "Call $" + amount);
         } else {
             this.getObservable().setLastAction(this.getHostName(), "Bet $" + amount);
+            this.getObservable().setLastPlayerToBet(this.getHostName());
         }
         broadcast(message);
-        // if (gameHost.equals(this.getHostName())) {
-        // } else {
-        //     String[] hostInfo = gameHost.getHost().split(":");
-        //     Socket p2pSocket = new Socket(hostInfo[0], Integer.parseInt(hostInfo[1]));
-        //     DataOutputStream dos = new DataOutputStream(p2pSocket.getOutputStream());
-        //     dos.writeBytes(message);
-        //     dos.flush();
-        //     dos.close();
-        //     p2pSocket.close();
-        // }
     }
 
     public void sendFoldMessage() {
@@ -146,16 +126,6 @@ public class ClientSession {
             }
         }
         this.getObservable().getPlayers().get(myIndex).fold();
-        // if (gameHost.equals(this.getHostName())) {
-        // } else {
-        //     String[] hostInfo = gameHost.getHost().split(":");
-        //     Socket p2pSocket = new Socket(hostInfo[0], Integer.parseInt(hostInfo[1]));
-        //     DataOutputStream dos = new DataOutputStream(p2pSocket.getOutputStream());
-        //     dos.writeBytes(message);
-        //     dos.flush();
-        //     dos.close();
-        //     p2pSocket.close();
-        // }
     }
 
     //closes client session

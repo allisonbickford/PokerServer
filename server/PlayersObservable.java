@@ -11,29 +11,30 @@ public class PlayersObservable extends Observable {
   private ArrayList<Player> players = new ArrayList<>();
   private Integer currentPot = new Integer(0);
   private Entry<String, String> lastAction = new AbstractMap.SimpleEntry<String, String>("", "Small Blind - $1");
+  private String lastPlayerToBet = "";
 
   public void setHost(String host) {
     this.gameHost = host;
     setChanged();
-    notifyObservers(host);
+    notifyObservers("host");
   }
 
   public void setPlayers(ArrayList<Player> players) {
     this.players = players;
     setChanged();
-    notifyObservers(players);
+    notifyObservers("players");
   }
 
   public void setPot(int money) {
     this.currentPot = money;
     setChanged();
-    notifyObservers(this.currentPot);
+    notifyObservers("pot");
   }
 
   public void addToPot(int money) {
     this.currentPot += money;
     setChanged();
-    notifyObservers(this.currentPot);
+    notifyObservers("pot");
   }
 
   public void setLastAction(String hostName, String action) {
@@ -41,11 +42,13 @@ public class PlayersObservable extends Observable {
     // get player who just made an action
     int lastPlayerIndex = 0;
     for (int i = 0; i < this.players.size(); i++) {
-      if (this.players.get(i).equals(hostName)) {
+      if (this.players.get(i).getHostName().equals(hostName)) {
         lastPlayerIndex = i;
         break;
       }
     }
+    this.players.get(lastPlayerIndex).setLastAction(action);
+    
     while (this.players.get(lastPlayerIndex).hasFolded()) { // skip people who folded
       lastPlayerIndex = (lastPlayerIndex + 1) % this.players.size();
     }
@@ -58,7 +61,13 @@ public class PlayersObservable extends Observable {
     // turn goes to next player
     this.players.get(nextPlayerIndex).setTurn(true);
     setChanged();
-    notifyObservers(this.lastAction);
+    notifyObservers("action");
+  }
+
+  public void setLastPlayerToBet(String hostName) {
+    this.lastPlayerToBet = hostName;
+    setChanged();
+    notifyObservers("lastPlayerToBet");
   }
 
   public String getHost() {
@@ -83,5 +92,15 @@ public class PlayersObservable extends Observable {
 
   public Entry<String, String> getLastAction() {
     return this.lastAction;
+  }
+
+  public String getLastPlayerToBet() {
+    return this.lastPlayerToBet;
+  }
+
+  public int getHighestBet() {
+    return Integer.parseInt(
+      this.getLastAction().getValue().replaceAll("[^\\d.]", "") // remove "Bet " from action
+    );
   }
 }
