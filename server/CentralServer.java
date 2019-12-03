@@ -229,6 +229,10 @@ class SubServerHandler implements Runnable {
                             CentralServer.broadcast(message);
                             CentralServer.clearScores();
                         }
+                    }else if(clientCommand.startsWith("flopWin")){
+                        String message = String.format("%d winner: %s", this.socket.getPort(), commands[1]);
+                        CentralServer.broadcast(message);
+                        CentralServer.clearScores();
                     }
                 }
             } catch (Exception e) {

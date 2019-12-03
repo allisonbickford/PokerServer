@@ -189,7 +189,8 @@ class ClientHandler implements Runnable {
                     } else if(clientCommand.startsWith("endRound")){
                         clientSession.sendCards();
                         Server.getGame().reset();
-                } else if (clientCommand.startsWith("action:")) {
+                }
+                else if (clientCommand.startsWith("action:")) {
                     String playerHost = tokens.nextToken(); // Host name of player that just acted
                     String action = tokens.nextToken(); // Bet, Check, Call, or Fold
                     if (action.equals("Bet")) {

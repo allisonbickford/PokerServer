@@ -24,7 +24,7 @@ public class PlayersObservable extends Observable {
     setChanged();
     notifyObservers("host");
   }
-
+  public boolean getEndRound(){return endRound;}
   public void setPlayers(ArrayList<Player> players) {
     this.players = players;
     setChanged();
@@ -37,11 +37,15 @@ public class PlayersObservable extends Observable {
       this.endRound = false;
       setChanged();
       notifyObservers("phase");
+
+
     } else {
       this.endRound = true;
-      this.phase++;
       setChanged();
       notifyObservers("endRound");
+
+
+      this.phase++;
     }
     return endRound;
   }

@@ -176,6 +176,24 @@ public class ClientSession {
         String message = String.format("%d action: %s Fold\n", this.mutablePort, this.getHostName());
         Server.getGame().fold(this.getHostName());
         broadcast(message);
+        if (Server.getGame().playersNotFolded() == 1) {
+            String host="";
+            for (Player player: Server.getGame().getPlayers()) {
+                if (!player.hasFolded()) {
+                    host = player.getHostName();
+                }
+            }
+            try {
+                DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
+                centralDOS.writeBytes(String.format("flopWin: %s ", host));
+                centralDOS.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("There was a problem sending win.");
+            }
+        } else {
+            Server.getGame().nextTurn();
+        }
     }
 
     public void endPhase() {
@@ -214,7 +232,7 @@ public class ClientSession {
                 this.endRound();
             }
         }
-        
+
     public void endRound() {
         this.mutablePort += 7;
         String message = String.format("%d endRound %s\n", this.mutablePort, this.getHostName());
@@ -240,7 +258,7 @@ public class ClientSession {
             Card[] cards = Server.getGamePlayers().get(myIndex).getCards();
             String message = String.format("%d cards: %s %s %s %s %s\n", 
                 this.mutablePort, this.getHostName(), cards[0].suit(), cards[0].rank(), cards[1].suit(), cards[1].rank());
-            broadcast(message);
+                broadcast(message);
             this.sendScore(Server.getGame().getScore(cards));
         } else {
             this.sendScore(0); // make sure this is too low to win
