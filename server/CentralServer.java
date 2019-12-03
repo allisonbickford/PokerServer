@@ -219,15 +219,15 @@ class SubServerHandler implements Runnable {
                         String message = this.socket.getPort() + " endPhase ";
                         CentralServer.broadcast(message);
                         phase++;
-                    } else if(clientCommand.startsWith("score")){
+                    } else if(clientCommand.startsWith("score:")){
                         String hostName = commands[1];
                         int score = Integer.parseInt(commands[2]);
-                        System.out.println(CentralServer.getScoresReceived());
+
                         if ((int)CentralServer.getWinner().getValue() < score) {
                             CentralServer.setWinner(new SimpleEntry<String, Integer>(hostName, score));
                         }
                         CentralServer.incScoresReceived();
-                        
+                        System.out.println("cs score: " + CentralServer.getScoresReceived());
                         if (CentralServer.getScoresReceived() == CentralServer.getNumberOfPlayers()) {
                             String message = String.format("%d winner: %s", this.socket.getPort(), CentralServer.getWinner().getKey());
                             CentralServer.broadcast(message);
@@ -239,7 +239,12 @@ class SubServerHandler implements Runnable {
                         String message = this.socket.getPort() +" bet " + commands[1] + " " + commands[2];
                         CentralServer.broadcast(message);
 
-                    }else if(clientCommand.startsWith("raise:")){
+                    }else if(clientCommand.startsWith("foldWin:")){
+                        String message = String.format("%d winner: %s", this.socket.getPort(), commands[1]);
+                        CentralServer.broadcast(message);
+                        CentralServer.clearScores();
+                    }
+                    else if(clientCommand.startsWith("raise:")){
                         //1 = user 2 == bet amount
                         System.out.println("New raise from: " + commands[1] +" for $"+ commands[2]);
                         String message = this.socket.getPort() +" raise " + commands[1] + " " + commands[2];

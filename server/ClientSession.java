@@ -96,7 +96,6 @@ public class ClientSession {
                 break;
             }
         }
-        
         // give money to the pot
         this.getObservable().getPlayers().get(myIndex).removeMoney(amount);
         this.getObservable().addToPot(amount);
@@ -162,7 +161,32 @@ public class ClientSession {
                 break;
             }
         }
+        //check if its a fold win.
         this.getObservable().getPlayers().get(myIndex).fold();
+        int j =1;
+        String host="";
+        for (int i = 0; i < this.getObservable().getPlayers().size(); i++) {
+            if (this.getObservable().getPlayers().get(i).hasFolded()) {
+                j++;
+            }else{
+                host = this.getObservable().getPlayers().get(i).getHostName();
+            }
+        }
+        if(j==this.getObservable().getPlayers().size()){
+           // this.mutablePort += 7;
+           // message = String.format("%d winner: %s\n", this.mutablePort, host);
+            //this.getObservable().setRoundWinner(host);
+            //broadcast(message);
+            try {
+                DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
+                centralDOS.writeBytes(String.format("foldWin: %s\n", host));
+                centralDOS.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("There was a problem sending your score.");
+            }
+        }
+
     }
 
     public void endPhase() {
@@ -170,6 +194,7 @@ public class ClientSession {
         String gameHost = this.server.getObservable().getHost();
         String message = String.format("%d endPhase %s\n",this.mutablePort, this.getHostName());
         broadcast(message);
+
     }
 
     public void endRound() {
@@ -188,15 +213,18 @@ public class ClientSession {
             cardArray.add(card);
             cardString += " " + card.rank() + " " + card.suit();
         }
+        System.out.println("ending phase from cs");
+       //String message = String.format("%d endPhase %s\n",this.mutablePort, this.getHostName());
         String message = String.format("%d endPhase %s %s\n", this.mutablePort, this.getHostName(), cardString);
         broadcast(message);
         this.getObservable().addToBoard(cardArray);
+        //endPhase();
     }
 
     public void sendScore(int score) {
         try {
             DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
-            centralDOS.writeBytes(String.format("score: %s %d", this.getHostName(), score));
+            centralDOS.writeBytes(String.format("score: %s %d\n", this.getHostName(), score));
             centralDOS.close();
         } catch (Exception e) {
             e.printStackTrace();

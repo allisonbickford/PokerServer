@@ -120,9 +120,9 @@ class ClientHandler implements Runnable {
                     playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Small Blind - $1");
                     playerInfo.get((dealerIndex + 1) % playerInfo.size()).removeMoney(1); // put in small blind
                     playersObservable.setHost(host); // triggers start of game for gui
-                    Thread.sleep(100); // trying to use the same thread?
+                    Thread.sleep(50); // trying to use the same thread?
                     playersObservable.setPot(3);
-                    Thread.sleep(100);
+                  //  Thread.sleep(100);
                     playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
                 } else if(clientCommand.startsWith("deck:")) {
                     String playerHost = tokens.nextToken(); // Host name of player that just acted
@@ -160,6 +160,7 @@ class ClientHandler implements Runnable {
                         }
                     }
                 } else if (clientCommand.startsWith("endPhase")) {
+                    System.out.println("server Endphase");
                     String host = tokens.nextToken();
                     ArrayList<Card> cards = new ArrayList<>();
                     while (tokens.hasMoreTokens()) {
@@ -169,6 +170,7 @@ class ClientHandler implements Runnable {
                     }
                     this.playersObservable.addToBoard(cards);
                     this.playersObservable.nextPhase();
+
                 } else if(clientCommand.startsWith("endRound")){
                     //TODO: DO we need logic regarding earnings here?
 
@@ -195,9 +197,9 @@ class ClientHandler implements Runnable {
                     playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
                     playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Small Blind - $1");
                     playerInfo.get((dealerIndex + 1) % playerInfo.size()).removeMoney(1); // put in small blind
-                    Thread.sleep(100); // trying to use the same thread?
+                    Thread.sleep(70); // trying to use the same thread?
                     playersObservable.setPot(3);
-                    Thread.sleep(100);
+                   // Thread.sleep(100);
                     playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
                 }
 
