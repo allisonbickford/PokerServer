@@ -145,8 +145,14 @@ class ClientHandler implements Runnable {
                     String host = tokens.nextToken();
                     int winnerIndex = Server.getGame().findUserIndex(host);
                     clientSession.getGUI().showWinnerDialog(Server.getGamePlayers().get(winnerIndex).getName());
-                    clientSession.getGUI().initializeGameGUI();
+                    Server.getGame().disperseWinnings(host);
                     Server.getGame().reset();
+                    Server.startGame(Server.getGame().getDealerIndex());
+                    int myIndex = Server.getGame().findUserIndex(clientSession.getHostName());
+                    if (myIndex == Server.getGame().getDealerIndex()) {
+                        Deck deck = new Deck();
+                        clientSession.dealCards(deck);
+                    }
                 } else if (clientCommand.startsWith("cards:")) {
                     String host = tokens.nextToken();
                     Card card1 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));

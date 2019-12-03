@@ -113,12 +113,15 @@ public class GameGUI extends JPanel {
         }
     }
 
+    public void actionAfterBet() {
+        this.myPanel.actionAfterBet();
+    }
+
     public void setButtonsToBeginningOfRound() {
         this.myPanel.actionAfterCheck();
     }
 
     public void setPotLabel(int amount) {
-        System.out.println("setting pot to " + amount);
         this.potLabel.setText("Pot: $" + amount);
     }
 

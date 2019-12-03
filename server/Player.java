@@ -29,6 +29,15 @@ public class Player {
         this.isTurn = false;
     }
 
+    public void reset() {
+        this.lastAction = "";
+        this.role = "";
+        this.cardPanel = new CardPanel();
+        this.hasFolded = false;
+        this.currentBet = 0;
+        this.isTurn = false;
+    }
+
     public void addMoney(int money) {
         this.money += money;
     }
@@ -63,6 +72,10 @@ public class Player {
     public void fold() {
         this.hasFolded = true;
         this.cardPanel.fold();
+    }
+
+    public void setFolded(boolean folded) {
+        this.hasFolded = false;
     }
 
     public void setCurrentBet(int bet) {

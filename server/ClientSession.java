@@ -168,6 +168,10 @@ public class ClientSession {
         if (Server.getGame().endOfPhase() && Server.getGame().getDealerHostName().equals(this.getHostName())) {
             endPhase();
         }
+        if (Server.getGamePlayers().get(Server.getGame().getTurnIndex()).getLastAction().contains("Blind")) {
+            this.gui.getGameGUI().actionAfterBet();
+            this.gui.getGameGUI().stopPlay();
+        }
         this.mutablePort += 7;
         String message = String.format("%d action: %s Fold\n", this.mutablePort, this.getHostName());
         Server.getGame().fold(this.getHostName());
@@ -276,7 +280,11 @@ public class ClientSession {
     public void updateMyPanel(String lastAction) {
         this.gui.getGameGUI().changePlayerButtons(lastAction);
         int myIndex = Server.getGame().findUserIndex(this.getHostName());
-        if (Server.getGame().getTurnHostName().equals(this.getHostName()) && !Server.getGame().getPlayers().get(myIndex).hasFolded()) {
+        if (Server.getGamePlayers().get(myIndex).getLastAction().contains("Small")) {
+            this.gui.getGameGUI().actionAfterBet();
+        }
+        if (Server.getGame().getTurnHostName().equals(this.getHostName()) &&
+            !Server.getGame().getPlayers().get(myIndex).hasFolded()) {
             this.gui.getGameGUI().resumePlay();
         } else {
             this.gui.getGameGUI().stopPlay();

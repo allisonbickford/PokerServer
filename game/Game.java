@@ -30,10 +30,13 @@ public class Game {
         this.players = players;
         this.dealerIndex = dealerIndex;
         if (this.players.size() == 2) {
+            /** set up dealer */
             this.players.get(dealerIndex).setRole("D/BB");
             this.players.get(dealerIndex).removeMoney(bigBlind);
             this.players.get((dealerIndex) % this.players.size()).setLastAction("Big Blind - $" + bigBlind);
             this.players.get((dealerIndex + 1) % this.players.size()).setRole("SB");
+
+            /** set up small blind */
             this.players.get((dealerIndex + 1) % this.players.size()).setLastAction("Small Blind - $" + (bigBlind / 2));
             this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind / 2);
             this.players.get((dealerIndex + 1) % this.players.size()).setCurrentBet(bigBlind / 2);
@@ -41,9 +44,14 @@ public class Game {
             this.endOfRoundIndex = dealerIndex;
         } else {
             this.players.get(dealerIndex).setRole("D");
+            
+            /** set up small blind */
             this.players.get((dealerIndex + 1) % this.players.size()).setRole("SB");
             this.players.get((dealerIndex + 1) % this.players.size()).setLastAction("Small Blind - $" + (bigBlind / 2));
             this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind / 2);            
+            this.players.get((dealerIndex + 1) % this.players.size()).setCurrentBet(bigBlind / 2);
+
+            /** set up big blind */
             this.players.get((dealerIndex + 2) % this.players.size()).setRole("BB");
             this.players.get((dealerIndex + 2) % this.players.size()).setLastAction("Big Blind - $" + bigBlind);
             this.players.get((dealerIndex + 2) % this.players.size()).removeMoney(bigBlind);
@@ -100,7 +108,13 @@ public class Game {
         
         if (playersNotFolded() == 1) {
             this.currentPhase = Phase.END;
-            this.endRound();
+            for (Player player: this.players) {
+                if (!player.hasFolded()) {
+                    this.disperseWinnings(player.getHostName());
+                    this.reset();
+                    break;
+                }
+            }
         } else {
             this.nextTurn();
         }
@@ -113,13 +127,19 @@ public class Game {
                 this.players.get(i).setTurn(false);
                 turnIndex = (i + 1) % this.players.size();
                 while (this.players.get(turnIndex).hasFolded()) {
-                    turnIndex = (i + 1) % this.players.size();
+                    turnIndex = (turnIndex + 1) % this.players.size();
                 }
             }
             if (this.players.size() > 2 && tmpPlayer.getRole().contains("SB")) {
                 endOfRoundIndex = i;
+                while (this.players.get(endOfRoundIndex).hasFolded()) {
+                    endOfRoundIndex = (endOfRoundIndex + 1) % this.players.size();
+                }
             } else if (this.players.size() == 2 && tmpPlayer.getRole().contains("D")) {
                 endOfRoundIndex = i;
+                while (this.players.get(endOfRoundIndex).hasFolded()) {
+                    endOfRoundIndex = (endOfRoundIndex + 1) % this.players.size();
+                }
             }
         }
         this.players.get(turnIndex).setTurn(true);
@@ -149,10 +169,6 @@ public class Game {
                 this.currentPhase = Phase.PREFLOP;
                 break;
         }
-    }
-
-    public void endRound() {
-        // TODO: evaluate hands
     }
 
     public int getScore(Card[] cards) {
@@ -193,13 +209,21 @@ public class Game {
             return permute(A, currentMax, j + 1, n, k - 1);
 
         }
-
         return 0;
-	}
+    }
+    
+    public void disperseWinnings(String winnerHostName) {
+        int winnerIndex = findUserIndex(winnerHostName);
+        this.players.get(winnerIndex).addMoney(this.pot);
+        this.pot = 0;
+    }
 
     public void reset() {
         this.currentPhase = Phase.PREFLOP;
         dealerIndex = (dealerIndex + 1) % this.players.size();
+        for (Player player: this.players) {
+            player.reset();
+        }
         if (this.players.size() == 2) {
             this.players.get(dealerIndex).setRole("D/BB");
             this.players.get(dealerIndex).removeMoney(bigBlind);
@@ -289,8 +313,16 @@ public class Game {
         }
     }
 
+    public int getDealerIndex() {
+        return this.dealerIndex;
+    }
+
     public String getDealerHostName() {
         return this.players.get(this.dealerIndex).getHostName();
+    }
+
+    public int getTurnIndex() {
+        return this.turnIndex;
     }
 
     public String getTurnHostName() {
