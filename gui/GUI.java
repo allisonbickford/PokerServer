@@ -392,5 +392,8 @@ public class GUI extends JFrame implements ActionListener, Observer  {
         else if(arg.toString().equals("phase")){
             this.observable.nextPhase();
         }
+        else if(arg.toString().equals("endRound")){
+            JOptionPane.showMessageDialog(frame,"The round has ended");
+        }
     }
 }
