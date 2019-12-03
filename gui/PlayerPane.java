@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 
 import game.*;
 import server.ClientSession;
+import server.Server;
 
 class PlayerPane extends JPanel {
     private Card firstCard, secondCard;
@@ -27,10 +28,7 @@ class PlayerPane extends JPanel {
         this.checkBtn = new JButton("Check");
         this.checkBtn.addActionListener(e -> {
             if (((JButton) e.getSource()).getText().equals("Call")) {
-                int checkAmount = Integer.parseInt(
-                    session.getObservable().getLastAction().getValue().replaceAll("[^\\d.]", "") // remove "Bet " from action
-                );
-                session.sendBetMessage(checkAmount);
+                session.sendCallMessage();
             } else {
                 session.sendCheckMessage();
             }
@@ -54,7 +52,11 @@ class PlayerPane extends JPanel {
         SpinnerNumberModel numberSpinnerModel = new SpinnerNumberModel(1, 1, 100, 1);
         betSpinner = new JSpinner(numberSpinnerModel);
         this.betBtn.addActionListener(e -> {
-            session.sendBetMessage(numberSpinnerModel.getNumber().intValue());
+            if (((JButton) e.getSource()).getText().equals("Bet")) {
+                session.sendBetMessage(numberSpinnerModel.getNumber().intValue());
+            } else {
+                session.sendRaiseMessage(numberSpinnerModel.getNumber().intValue());
+            }
         });
         cons.gridx = 1;
         this.add(betSpinner, cons);

@@ -62,6 +62,7 @@ public class Player {
 
     public void fold() {
         this.hasFolded = true;
+        this.cardPanel.fold();
     }
 
     public void setCurrentBet(int bet) {

@@ -7,16 +7,18 @@ import java.util.Map.Entry;
 
 import game.Deck;
 import game.Card;
+import game.Game;
 
-class Server implements Runnable {
+public class Server implements Runnable {
     public int port;
     public String address;
-    public String userName = "";
-    public PlayersObservable playersObservable = new PlayersObservable();
+    private static Game game;
+    private static ArrayList<Player> registeredPlayers = new ArrayList<>();
+    private ClientSession clientSession;
 
-    public Server(int port, String userName) {
+    public Server(int port, ClientSession clientSession) {
         this.port = port;
-        this.userName = userName;
+        this.clientSession = clientSession;
     }
 
     public void run() {
@@ -27,32 +29,47 @@ class Server implements Runnable {
             while(true) {
                 Socket connectionSocket = welcomeSocket.accept();
                 System.out.println("Victim at: " + connectionSocket.getPort());
-                new Thread(new ClientHandler(connectionSocket, userName, playersObservable, this.address + ":" + this.port)).start();
+                new Thread(new ClientHandler(connectionSocket, this.clientSession, this.address + ":" + this.port)).start();
             }
         } catch(Exception e) {
              e.printStackTrace();
         }
     }
 
-    public void setPlayers(ArrayList<Player> updatedPlayers) {
-        playersObservable.setPlayers(updatedPlayers);
+    public static Game getGame() {
+        return game;
     }
 
-    public PlayersObservable getObservable() {
-        return this.playersObservable;
+    public static ArrayList<Player> getGamePlayers() {
+        return game.getPlayers();
+    }
+
+    public static void setPlayers(ArrayList<Player> players) {
+        registeredPlayers = players;
+    }
+
+    public static ArrayList<Player> getRegisteredPlayers() {
+        return registeredPlayers;
+    }
+
+    public static void startGame(int dealerIndex) {
+        game = new Game(registeredPlayers, dealerIndex);
+    }
+
+    public static void advanceGamePhase() {
+        game.nextPhase();
     }
 }
 
 class ClientHandler implements Runnable {
     private Socket socket;
-    private String userName;
     private PlayersObservable playersObservable;
     private String address;
+    private ClientSession clientSession;
 
-    public ClientHandler(Socket socket, String userName, PlayersObservable playersObservable, String myAddress) {
+    public ClientHandler(Socket socket, ClientSession clientSession, String myAddress) {
         this.socket = socket;
-        this.userName = userName;
-        this.playersObservable = playersObservable;
+        this.clientSession = clientSession;
         this.address = myAddress;
     }
 
@@ -62,7 +79,6 @@ class ClientHandler implements Runnable {
         String clientCommand;
         String frstln;
         int port = this.socket.getPort();
-        Deck deck = null;
 
         while (true) {
             try {
@@ -95,64 +111,48 @@ class ClientHandler implements Runnable {
                             new Player(info[1], info[0])
                         );
                     }
-                    playersObservable.setPlayers(updatedPlayers);
+                    Server.setPlayers(updatedPlayers);
+                    clientSession.getGUI().updatePlayerLobby(updatedPlayers);
                 } else if (clientCommand.startsWith("STARTING!")) {
                     tokens.nextToken(); // Host:
                     String host = tokens.nextToken();
                     System.out.println("Dealer is: " + host);
-                    ArrayList<Player> playerInfo = playersObservable.getPlayers();
+                    int myIndex = 0;
                     int dealerIndex = 0;
-                    for (int i = 0; i < playerInfo.size(); i++) {
-                        if (playerInfo.get(i).getHostName().contains(host)) {
+                    for (int i = 0; i < Server.getRegisteredPlayers().size(); i++) {
+                        if (Server.getRegisteredPlayers().get(i).getHostName().contains(host)) {
                             dealerIndex = i;
-                            break;
+                        }
+                        if (Server.getRegisteredPlayers().get(i).getHostName().contains(clientSession.getHostName())) {
+                            myIndex = i;
                         }
                     }
-                    playerInfo.get(dealerIndex).setRole("D"); // dealer
-                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setRole("BB"); // big blind
-                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setLastAction("Big Blind - $2"); // big blind
-                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).removeMoney(2); // put in big blind
-                    playerInfo.get((dealerIndex + 3) % playerInfo.size()).setTurn(true);
-                    if (playerInfo.size() == 2) {
-                        playerInfo.get(dealerIndex).setRole("D/BB");
+
+                    Server.startGame(dealerIndex);
+                    if (myIndex == dealerIndex) {
+                        Deck deck = new Deck();
+                        clientSession.dealCards(deck);
                     }
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Small Blind - $1");
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).removeMoney(1); // put in small blind
-                    playersObservable.setHost(host); // triggers start of game for gui
-                    Thread.sleep(100); // trying to use the same thread?
-                    playersObservable.setPot(3);
-                    Thread.sleep(100);
-                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
-                } else if(clientCommand.startsWith("deck:")) {
-                    String playerHost = tokens.nextToken(); // Host name of player that just acted
-                    String action = tokens.nextToken(); // Bet, Check, Call, or Fold
-                    if (action.equals("Deck")) {
-                        ArrayList<Player> playerInfo = this.playersObservable.getPlayers();
-                        int card1 = Integer.parseInt(tokens.nextToken());
-                        int suit1 = Integer.parseInt(tokens.nextToken());
-                        int card2 = Integer.parseInt(tokens.nextToken());
-                        int suit2 = Integer.parseInt(tokens.nextToken());
-                        System.out.println("cards: " + card1 + " " + suit1 + " " + card2 + " " + suit2);
-                        String sendToHost = tokens.nextToken();
-                        for (Player player : playerInfo) {
-                            if (player.getHostName().contains(sendToHost)) {
-                                System.out.println("cards: " + sendToHost + " " + card1 + " " + suit1 + " " + card2 + " " + suit2);
-                                Card first = new Card(suit1, card1);
-                                Card second = new Card(suit2, card2);
-                                player.setCards(first, second);
-                            }
-                        }
-                    }
+                } else if (clientCommand.startsWith("yourcards:")) {
+                    Card card1 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
+                    Card card2 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
+                    System.out.println("cards: " + card1.rank() + " " + card1.suitStr() + " " + card2.rank() + " " + card2.suitStr());
+                    int myIndex = Server.getGame().findUserIndex(clientSession.getHostName());
+                    Server.getGamePlayers().get(myIndex).setCards(card1, card2);
+                    clientSession.getGUI().initializeGameGUI();
+                    clientSession.updatePot();
                 } else if (clientCommand.startsWith("winner")) {
                     String host = tokens.nextToken();
-                    this.playersObservable.setRoundWinner(host);
+                    int winnerIndex = Server.getGame().findUserIndex(host);
+                    clientSession.getGUI().showWinnerDialog(Server.getGamePlayers().get(winnerIndex).getName());
+                    clientSession.getGUI().initializeGameGUI();
+                    Server.getGame().reset();
                 } else if (clientCommand.startsWith("cards:")) {
                     String host = tokens.nextToken();
                     Card card1 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
                     Card card2 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
 
-                    for (Player player : this.playersObservable.getPlayers()) {
+                    for (Player player : Server.getGamePlayers()) {
                         if (player.getHostName().contains(host)) {
                             player.setCards(card1, card2);
                             player.showCards();
@@ -160,84 +160,52 @@ class ClientHandler implements Runnable {
                         }
                     }
                 } else if (clientCommand.startsWith("endPhase")) {
-                    String host = tokens.nextToken();
                     ArrayList<Card> cards = new ArrayList<>();
                     while (tokens.hasMoreTokens()) {
-                        String cardRank = tokens.nextToken();
                         String cardSuit = tokens.nextToken();
+                        String cardRank = tokens.nextToken();
                         cards.add(new Card(Integer.parseInt(cardSuit), Integer.parseInt(cardRank)));
                     }
-                    this.playersObservable.addToBoard(cards);
-                    this.playersObservable.nextPhase();
-                } else if(clientCommand.startsWith("endRound")){
-                    //TODO: DO we need logic regarding earnings here?
-
-                    ArrayList<Player> playerInfo = playersObservable.getPlayers();
-                    int dealerIndex = 0;
-
-                    for (int i = 0; i < playerInfo.size(); i++) {
-                        if (playerInfo.get(i).getRole().equals("D")) {
-                            dealerIndex = i +1;
+                    Server.getGame().nextPhase();
+                    switch (Server.getGame().phaseString()) {
+                        case "flop":
+                            clientSession.getGUI().getGameGUI().flop(new Card[]{cards.get(0), cards.get(1), cards.get(2)});
+                            break;
+                        case "turn":
+                            clientSession.getGUI().getGameGUI().turn(cards.get(0));
+                            break;
+                        case "river":
+                            clientSession.getGUI().getGameGUI().river(cards.get(0));
                             break;
                         }
-                    }
-                    String dealer = playerInfo.get(dealerIndex).getHostName();
-                    System.out.println("Dealer is: " + dealer);
-
-                    playerInfo.get(dealerIndex).setRole("D"); // dealer
-                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setRole("BB"); // big blind
-                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).setLastAction("Big Blind - $2"); // big blind
-                    playerInfo.get((dealerIndex + 2) % playerInfo.size()).removeMoney(2); // put in big blind
-                    playerInfo.get((dealerIndex + 3) % playerInfo.size()).setTurn(true);
-                    if (playerInfo.size() == 2) {
-                        playerInfo.get(dealerIndex).setRole("D/BB");
-                    }
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setRole("SB");
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Small Blind - $1");
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).removeMoney(1); // put in small blind
-                    Thread.sleep(100); // trying to use the same thread?
-                    playersObservable.setPot(3);
-                    Thread.sleep(100);
-                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
-                }
-
-                else if (clientCommand.startsWith("action:")) {
+                        Server.getGame().addToBoard(cards);
+                        clientSession.getGUI().getGameGUI().setButtonsToBeginningOfRound();
+                    } else if(clientCommand.startsWith("endRound")){
+                        clientSession.sendCards();
+                        Server.getGame().reset();
+                } else if (clientCommand.startsWith("action:")) {
                     String playerHost = tokens.nextToken(); // Host name of player that just acted
                     String action = tokens.nextToken(); // Bet, Check, Call, or Fold
-                    int playerIndex = 0;
-                    for (int i = 0; i < this.playersObservable.getPlayers().size(); i++) {
-                        if (this.playersObservable.getPlayers().get(i).getHostName().contains(playerHost)) {
-                            playerIndex = i;
-                            break;
-                        }
-                    }
                     if (action.equals("Bet")) {
                         String betAmount = tokens.nextToken(); // amount of $ bet
-                        this.playersObservable.setLastAction(playerHost, action + " " + betAmount);
-                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action + " $" + betAmount);
-                        this.playersObservable.addToPot(Integer.parseInt(betAmount));
-                        this.playersObservable.setLastPlayerToBet(playerHost);
-                        this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(Integer.parseInt(betAmount));
+                        Server.getGame().bet(playerHost, Integer.parseInt(betAmount));
+                    } else if (action.equals("Raise")) {
+                        String raiseAmount = tokens.nextToken(); // amount of $ raised
+                        Server.getGame().raise(playerHost, Integer.parseInt(raiseAmount));
                     } else if (action.equals("Call")) {
-                        int amountToCall = this.playersObservable.getHighestBet() - this.playersObservable.getPlayers().get(playerIndex).getCurrentBet();
-                        this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(this.playersObservable.getHighestBet());
-                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
-                        this.playersObservable.addToPot(amountToCall);
-                        this.playersObservable.setLastPlayerToBet(playerHost);
-                        this.playersObservable.setLastAction(playerHost, action);
-                    } else {
-                        this.playersObservable.setLastAction(playerHost, action);
-                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
+                        Server.getGame().call(playerHost);
+                    } else if (action.equals("Check")) {
+                        Server.getGame().check(playerHost);
+                    } else if (action.equals("Fold")) {
+                        Server.getGame().fold(playerHost);
                     }
-                } else {
-                    Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
-                    DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());
-
-                    // command handling goes here 
-
-                    dataSocket.close();
-                    System.out.println("Data Socket closed");
-                }
+                    clientSession.updatePot();
+                    clientSession.updateMyPanel(action);
+                    int myIndex = Server.getGame().findUserIndex(clientSession.getHostName());
+                    if (Server.getGamePlayers().get(myIndex).getLastAction().contains("Big")) {
+                        clientSession.getGUI().getGameGUI().setButtonsToBeginningOfRound();
+                    }
+                } 
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("There was a problem, " +

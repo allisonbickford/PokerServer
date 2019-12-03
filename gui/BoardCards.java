@@ -11,14 +11,10 @@ public class BoardCards extends JPanel {
     private Card card1, card2, card3, card4, card5;
     private ImageIcon card1Image, card2Image, card3Image, card4Image, card5Image;
     private JLabel card1Slot, card2Slot, card3Slot, card4Slot, card5Slot;
-    private ClientSession session;
 
-    public BoardCards(ClientSession session, Integer state) {
-        this.session = session;
+    public BoardCards(Integer state) {
         this.setLayout(new GridBagLayout());
-
         displayBoardCards(state);
-
         this.setBackground(new Color(12, 107, 17));
     }
 
@@ -26,6 +22,7 @@ public class BoardCards extends JPanel {
         this.card1 = card1;
         this.card2 = card2;
         this.card3 = card3;
+        System.out.println(card1.suitStr());
         displayBoardCards(0);
     }
 
@@ -169,7 +166,6 @@ public class BoardCards extends JPanel {
 
     private Image getCardImage(Card card) {
         int cardNumber = card.rank();
-        String suitnumber = Integer.toString(card.suit());
         String cardLetter = card.suitLetter();
 
         try {
