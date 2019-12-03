@@ -17,7 +17,7 @@ package game;
          byte cardRank;                -- contain 2, 3, ... 13, 14
    ----------------------------------------------------------- */
 
-   public class Card {
+public class Card {
     private int number;
     private Suit suit;
     public static final int SPADE = 4;
@@ -32,11 +32,11 @@ package game;
 
     // * , Diamonds , Club , Heart , Spade
     private static final String[] Suit = {
-        "*", 
-        String.valueOf('\u2666'),   // Diamonds
-        String.valueOf('\u2663'),   // Clubs
-        String.valueOf('\u2764'),   // Hearts
-        String.valueOf('\u2660')    // Spades
+            "*",
+            String.valueOf('\u2666'),   // Diamonds
+            String.valueOf('\u2663'),   // Clubs
+            String.valueOf('\u2764'),   // Hearts
+            String.valueOf('\u2660')    // Spades
     };
 
     private static final String[] Rank = {"*", "*", "2", "3", "4","5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
@@ -65,8 +65,7 @@ package game;
             cardRank = (byte) number;
             this.number = number;
         }
-            
-        
+
         switch(suit){
             case DIAMONDS:
                 cardSuit = DIAMOND;
@@ -80,11 +79,18 @@ package game;
     }
 
     public int suit() {
-        return (cardSuit);         
+        return (cardSuit);
     }
 
     public String suitStr() {
-        return (Suit[cardSuit]);
+        if(cardSuit==1){
+            return "Diamond";
+        }else if(cardSuit==2){
+            return "Club";
+        }else if(cardSuit==3){
+            return "Heart";
+        }else
+        {return"Spade";}
     }
 
     public int rank() {
@@ -96,6 +102,3 @@ package game;
     }
 }
 
-enum Suit {
-    SPADES, CLUBS, HEARTS, DIAMONDS
-}
