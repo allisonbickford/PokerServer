@@ -382,7 +382,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                     break;
                 }
             }
-
+            //System.out.println("gui phase");
             if (this.observable.getPlayers().get(myIndex).getRole().contains("SB")) {
                 if (this.observable.getPhase() == 0) {
                     Card firstCard = this.deck.draw();
@@ -392,14 +392,23 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                 } else if (this.observable.getPhase() <= 2) {
                     Card nextCard = this.deck.draw();
                     this.clientSession.sendNextPhase(new Card[]{nextCard});
+
                 }
+            }else{
+                //automates a win
+             //   this.clientSession.endPhase();
+               // if (this.observable.getPhase() == 2){
+                 //   this.clientSession.endPhase();
+                //}
             }
+
         } else if (arg.toString().equals("board")) {
             ArrayList<Card> board = this.observable.getBoard();
             if (this.observable.getBoardSize() == 3) {
                 this.boardCardPanel.flop(board.get(0), board.get(1), board.get(2));
             } else if (this.observable.getBoardSize() == 4) {
                 this.boardCardPanel.turn(board.get(3));
+
             } else if (this.observable.getBoardSize() == 5) {
                 this.boardCardPanel.river(board.get(4));
             }
@@ -412,20 +421,43 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                     break;
                 }
             }
-            
+            System.out.println("index: "+ myIndex);
             if (!this.observable.getPlayers().get(myIndex).hasFolded()) {
                 Card[] myCards = this.observable.getPlayers().get(myIndex).getCards();
-                Card[] allCards = new Card[]{
-                    this.observable.getBoard().get(0),
-                    this.observable.getBoard().get(1),
-                    this.observable.getBoard().get(2),
-                    this.observable.getBoard().get(3),
-                    this.observable.getBoard().get(4),
-                    myCards[0],
-                    myCards[1]
-                };
+                System.out.println("bs: "+ this.observable.getBoardSize());
+                Card[] allCards;
+                if(this.observable.getBoardSize()==3) {
+                    allCards = new Card[]{
+                            this.observable.getBoard().get(0),
+                            this.observable.getBoard().get(1),
+                            this.observable.getBoard().get(2),
+                            myCards[0],
+                            myCards[1]
+                    };
+                }else if(this.observable.getBoardSize()==4){
+                     allCards = new Card[]{
+                            this.observable.getBoard().get(0),
+                            this.observable.getBoard().get(1),
+                            this.observable.getBoard().get(2),
+                               this.observable.getBoard().get(3),
+                            // this.observable.getBoard().get(4),
+                            myCards[0],
+                            myCards[1]
+                    };
+                }else{
+                     allCards = new Card[]{
+                            this.observable.getBoard().get(0),
+                            this.observable.getBoard().get(1),
+                            this.observable.getBoard().get(2),
+                            this.observable.getBoard().get(3),
+                            this.observable.getBoard().get(4),
+                            myCards[0],
+                            myCards[1]
+                    };
+                }
+
                 int maxScore = permute(allCards, 0, 0, allCards.length, 5);
-                System.out.println(maxScore);
+                System.out.println("ms "+maxScore);
                 this.clientSession.sendScore(maxScore);
                 this.clientSession.sendCards(myCards);
             } else {
