@@ -4,22 +4,20 @@ import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
 import java.awt.RenderingHints;
-import java.awt.geom.AffineTransform;
 import javax.swing.Icon;
 
-/**
- *  Source: https://tips4java.wordpress.com/2009/04/06/rotated-icon/
- *  The RotatedIcon allows you to change the orientation of an Icon by
- *  rotating the Icon before it is painted. This class supports the following
- *  orientations:
- *
- * <ul>
- * <li>DOWN - rotated 90 degrees
- * <li>UP (default) - rotated -90 degrees
- * <li>UPSIDE_DOWN - rotated 180 degrees
- * <li>ABOUT_CENTER - the icon is rotated by the specified degrees about its center.
- * </ul>
- */
+/**********************************************************************
+Source: https://tips4java.wordpress.com/2009/04/06/rotated-icon/
+The RotatedIcon allows you to change the orientation of an Icon by
+rotating the Icon before it is painted. This class supports the following
+orientations:
+<ul>
+<li>DOWN - rotated 90 degrees
+<li>UP (default) - rotated -90 degrees
+<li>UPSIDE_DOWN - rotated 180 degrees
+<li>ABOUT_CENTER - the icon is rotated by the specified degrees about its center.
+</ul>
+**********************************************************************/
 public class RotatedIcon implements Icon
 {
 	public enum Rotate

@@ -3,11 +3,22 @@ package server;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Map.Entry;
-import java.util.Map;
 import java.util.AbstractMap;
-
 import game.Card;
 
+
+/**********************************************************************
+Determines the current state of the poker game. This class is used to
+manage the amount of money in the pot, the player count, who the host
+is, and identifying which phase the cards on the board are in 
+(eg. flop, turn, river, or initial state).
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 public class PlayersObservable extends Observable {
   private String gameHost = "";
   private ArrayList<Player> players = new ArrayList<>();

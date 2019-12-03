@@ -3,19 +3,29 @@ package gui;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
 import java.awt.*;
-
 import java.awt.event.*;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.Map.Entry;
-
 import server.ClientSession;
 import server.Player;
 import server.PlayersObservable;
 import game.*;
 
+
+/**********************************************************************
+Main graphical user interface that represents a poker table. The user
+interface displays the player's hand as well as the cards on the board.
+The other players that are playing are also displayed on this user
+interface.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 public class GUI extends JFrame implements ActionListener, Observer  {
     JPanel gamePanel;
     JPanel regPanel = new JPanel();

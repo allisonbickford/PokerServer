@@ -1,13 +1,19 @@
 package gui;
 
-
 import javax.swing.*;
 import java.awt.*;
 import javax.swing.table.TableCellRenderer;
-import java.util.ArrayList;
 
-import server.Player;
 
+/**********************************************************************
+Used to render cell for a player's card to be added to a GUI panel.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 public class CardCellRenderer implements TableCellRenderer {
     private static final long serialVersionUID = 1L;
     private CardPanel panel;

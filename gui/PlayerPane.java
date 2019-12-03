@@ -2,14 +2,24 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
-
 import game.*;
 import server.ClientSession;
 
+
+/**********************************************************************
+JPanel object that handles displaying many of the options represented
+on the poker table for the player. This view displays the player's
+two cards determined for each round. The view also displays the
+player's ability to check, bet, and fold.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 class PlayerPane extends JPanel {
     private Card firstCard, secondCard;
     private ImageIcon firstCardImg, secondCardImg;
@@ -41,6 +51,7 @@ class PlayerPane extends JPanel {
         this.foldBtn.addActionListener(e -> {
             this.session.sendFoldMessage();
         });
+        
         // image shows number/suit
         this.firstCardImg = new ImageIcon(getCardImage(firstCard));
         this.secondCardImg = new ImageIcon(getCardImage(secondCard));
@@ -81,12 +92,10 @@ class PlayerPane extends JPanel {
         cons.gridy = 2;
         cons.gridwidth = 2;
         this.add(this.secondCardSlot, cons);
-
         this.setBackground(new Color(12, 107, 17));
     }
 
     private Image getCardImage(Card card) {
-
         int cardNumber = card.rank();
         String cardLetter = card.suitStr().toString().substring(0,1);
         if(cardNumber ==14){

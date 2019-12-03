@@ -2,11 +2,19 @@ package server;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
-import java.text.*;
-import java.lang.*;
-import javax.swing.*;
 
+
+/**********************************************************************
+Manages most of the fucntionality used by a player in a poker game. The
+ClientSession class is responisble for broadcasting information from
+clients to the central server.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 public class ClientSession {
     private int port;
     private int mutablePort;

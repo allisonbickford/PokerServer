@@ -3,11 +3,24 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.regex.*;
 
+
+/**********************************************************************
+This class is used to store all of the necessary data for our poker
+game that needs to be known by all participating players. Such data
+includes:
+    - Number of players
+    - Host data
+
+Other functions include being able to start and stop the game.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 class CentralServer {
     private static Map<String, String> word = new LinkedHashMap<>(); // <"addr:port", username>
     private static Boolean gameRunning = false;
@@ -53,9 +66,6 @@ class CentralServer {
         }
     }
 
-
-
-
     /**
      * Adds player to hashmap
      * 
@@ -65,7 +75,6 @@ class CentralServer {
     public static void createword(String user, String host) {
         word.put(host, user);
     }
-
 
     /**
      * Creates a list of player usernames
@@ -88,7 +97,6 @@ class CentralServer {
         gameRunning = true;
     }
 
-
     /**
      * Returns the amount of players that are currently connected
      * 
@@ -97,7 +105,6 @@ class CentralServer {
     public static int getNumberOfPlayers() {
         return word.size();
     }
-
 
     /**
      * Returns the host of the game with the format host:port
@@ -114,7 +121,6 @@ class CentralServer {
         gameRunning = false;
         gameHost = "";
     }
-    
 
     /**
      * Removes a user/player from the list of players

@@ -1,6 +1,6 @@
 package game;
 
-/* -----------------------------------------------------------
+/**********************************************************************
    Encoding:
         Suit: 4 = Spade
               3 = Heart
@@ -15,9 +15,11 @@ package game;
    Card:
          byte cardSuit;                -- contain 1, 2, 3, or 4
          byte cardRank;                -- contain 2, 3, ... 13, 14
-   ----------------------------------------------------------- */
 
-   public class Card {
+    source: https://github.com/ckurtm/Poker/blob/master/src/main/
+                java/com/peirr/poker/models/Card.java
+**********************************************************************/
+public class Card {
     private int number;
     private Suit suit;
     public static final int SPADE = 4;
@@ -66,7 +68,6 @@ package game;
             this.number = number;
         }
             
-        
         switch(suit){
             case DIAMONDS:
                 cardSuit = DIAMOND;

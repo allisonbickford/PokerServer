@@ -7,6 +7,22 @@ import javax.imageio.ImageIO;
 import game.Card;
 import server.ClientSession;
 
+
+/**********************************************************************
+JPanel object used to represent the cards that appear on the board of
+a poker table. The view of the cards are determined by the current
+state of the game. Game states can be considered as the following:
+    state = 0 --> Flop              3 out of 5 cards visible
+          = 1 --> Turn              4 out of 5 cards visible
+          = 2 --> River             5 ouf of 5 cards visible
+          = 3 --> Initial state     0 out of 5 cards visible
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 public class BoardCards extends JPanel {
     private Card card1, card2, card3, card4, card5;
     private ImageIcon card1Image, card2Image, card3Image, card4Image, card5Image;

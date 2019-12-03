@@ -1,6 +1,7 @@
 package game;
 
-/* --------------------------------------------------------------
+
+/**********************************************************************
    Contains method to evaluate the strength of Poker hands
 
    Input of each method:
@@ -11,7 +12,10 @@ package game;
 
      An integer value represent the strength
      The higher the integer, the stronger the hand
-   -------------------------------------------------------------- */
+
+   source: https://github.com/ckurtm/Poker/blob/master/src/main/java/
+               com/peirr/poker/hands/variant/FiveHandEvaluator.java
+**********************************************************************/
 public class HandEvaluator
 {
    public static final int STRAIGHT_FLUSH = 8000000; 

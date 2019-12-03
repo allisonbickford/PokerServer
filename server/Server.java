@@ -3,11 +3,21 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.Map.Entry;
-
 import game.Deck;
 import game.Card;
 
+
+/**********************************************************************
+Used to handle information about the current game state. Information
+is sent to and from the central server to this update the current state
+of the game.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 class Server implements Runnable {
     public int port;
     public String address;

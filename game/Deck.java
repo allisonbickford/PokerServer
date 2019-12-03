@@ -3,6 +3,17 @@ package game;
 import java.util.Stack;
 import java.util.Collections;
 
+
+/**********************************************************************
+A deck of cards is created from the Card class and stored as a Stack.
+This class also allows for the cards to be shuffled and drawn from.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+**********************************************************************/
 public class Deck {
     Stack<Card> cards = new Stack<>();
 
