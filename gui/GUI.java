@@ -3,15 +3,12 @@ package gui;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
 import java.awt.*;
-
 import java.awt.event.*;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.Map.Entry;
-
 import server.ClientSession;
 import server.Player;
 import server.PlayersObservable;
@@ -28,6 +25,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
     private JTable playersTable;
     private JLabel potLabel;
     private PlayerPane myPanel;
+    private BoardCards boardCardPanel;
     JFrame frame;
     PlayersObservable observable = null;
     private String myName = "";
@@ -48,6 +46,12 @@ public class GUI extends JFrame implements ActionListener, Observer {
         
         Card first = deck.draw();
         Card second = deck.draw();
+        Card boardCard1 = deck.draw();
+        Card boardCard2 = deck.draw();
+        Card boardCard3 = deck.draw();
+        Card boardCard4 = deck.draw();
+        Card boardCard5 = deck.draw();
+
         for (int i = 0; i < playerInfo.size(); i++) {
             if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
                 playerInfo.get(i).setCards(first, second);
@@ -80,24 +84,33 @@ public class GUI extends JFrame implements ActionListener, Observer {
         this.potLabel.setOpaque(true);
         this.potLabel.setBackground(new Color(255, 255, 255));
         cons.gridx = 2;
-        cons.gridy = 4;
+        cons.gridy = 5;
         cons.anchor = GridBagConstraints.PAGE_END;
         this.gamePanel.add(potLabel, cons);
         
         myPanel = new PlayerPane(first, second, this.clientSession); // TODO: don't draw for everyone, central deck?
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.gridx = 0;
-        cons.gridy = 5;
+        cons.gridy = 7;
         cons.anchor = GridBagConstraints.PAGE_END;
         cons.gridwidth = 3;
         this.gamePanel.add(myPanel, cons);
+
+        boardCardPanel = new BoardCards(boardCard1, boardCard2, boardCard3, boardCard4, boardCard5, clientSession);
+        cons.fill = GridBagConstraints.HORIZONTAL;
+        cons.gridx = 0;
+        cons.gridy = 4;
+        cons.anchor = GridBagConstraints.PAGE_END;
+        cons.gridwidth = 10;
+        this.gamePanel.add(boardCardPanel, cons);
         
-        this.gamePanel.setPreferredSize(new Dimension(640, 480));
+        this.gamePanel.setPreferredSize(new Dimension(650, 700));
         frame.add(this.gamePanel);
-        frame.setBounds(200, 200, 640, 480);
-        frame.setBackground(new Color(12, 107, 17));
+        frame.setBounds(200, 200, 650, 700);
         frame.pack();
         frame.setVisible(true);
+        frame.setSize(650, 700);
+        frame.setBackground(new Color(12, 107, 17));
 
         for (int i = 0; i < playerInfo.size(); i++) {
             if (playerInfo.get(i).getHostName().equals(this.clientSession.getHostName())) {
@@ -169,7 +182,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
 
         this.add(this.regPanel);
         this.setBounds(200, 200, 640, 480);
-    //    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    //  this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     //  this.setVisible(true);
         
         frame.add(this.regPanel,regCons);

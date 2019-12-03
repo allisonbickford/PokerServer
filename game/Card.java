@@ -37,7 +37,7 @@ package game;
         String.valueOf('\u2663'),   // Clubs
         String.valueOf('\u2764'),   // Hearts
         String.valueOf('\u2660')    // Spades
-    };  
+    };
 
     private static final String[] Rank = {"*", "*", "2", "3", "4","5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
 
