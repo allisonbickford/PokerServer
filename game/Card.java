@@ -87,6 +87,19 @@ package game;
         return (Suit[cardSuit]);
     }
 
+    public String suitLetter() {
+        switch (cardSuit) {
+            case 1:
+                return "D";   // Diamonds
+            case 2:
+                return "C";   // Clubs
+            case 3:
+                return "H";   // Hearts
+            default:    
+                return "S";   // Spades
+        }
+    }
+
     public int rank() {
         return (cardRank);
     }

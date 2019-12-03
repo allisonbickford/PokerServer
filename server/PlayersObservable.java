@@ -16,7 +16,7 @@ public class PlayersObservable extends Observable {
   private String lastPlayerToBet = "";
   private Integer phase = 0;
   private Boolean endRound = false;
-  private Card[] board = new Card[5];
+  private ArrayList<Card> board = new ArrayList<>();
 
   public void setHost(String host) {
     this.gameHost = host;
@@ -90,6 +90,18 @@ public class PlayersObservable extends Observable {
     notifyObservers("lastPlayerToBet");
   }
 
+  public void addToBoard(ArrayList<Card> cards) {
+    this.board.addAll(cards);
+    setChanged();
+    notifyObservers("board");
+  }
+
+  public void clearBoard() {
+    this.board.clear();
+    setChanged();
+    notifyObservers();
+  }
+
   public String getHost() {
     return this.gameHost;
   }
@@ -124,5 +136,13 @@ public class PlayersObservable extends Observable {
     return Integer.parseInt(
       this.getLastAction().getValue().replaceAll("[^\\d.]", "") // remove "Bet " from action
     );
+  }
+
+  public ArrayList<Card> getBoard() {
+    return this.board;
+  }
+
+  public int getBoardSize() {
+    return this.board.size();
   }
 }

@@ -33,7 +33,7 @@ public class CardPanel extends JPanel {
 
     private Image getCardImage(Card card) {
         int cardNumber = card.rank();
-        String cardLetter = card.suitStr().toString().substring(0,1);
+        String cardLetter = card.suitLetter();
 
         try {
             return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(45, 70, Image.SCALE_SMOOTH);

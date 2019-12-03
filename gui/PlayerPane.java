@@ -88,7 +88,7 @@ class PlayerPane extends JPanel {
     private Image getCardImage(Card card) {
 
         int cardNumber = card.rank();
-        String cardLetter = card.suitStr().toString().substring(0,1);
+        String cardLetter = card.suitLetter();
         if(cardNumber ==14){
             cardNumber =1;
         }

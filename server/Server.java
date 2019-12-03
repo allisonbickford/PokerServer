@@ -129,14 +129,12 @@ class ClientHandler implements Runnable {
                     String action = tokens.nextToken(); // Bet, Check, Call, or Fold
                     if (action.equals("Deck")) {
                         ArrayList<Player> playerInfo = this.playersObservable.getPlayers();
-                        //  String playersHost = tokens.nextToken();
                         int card1 = Integer.parseInt(tokens.nextToken());
                         int suit1 = Integer.parseInt(tokens.nextToken());
                         int card2 = Integer.parseInt(tokens.nextToken());
                         int suit2 = Integer.parseInt(tokens.nextToken());
                         System.out.println("cards: " + card1 + " " + suit1 + " " + card2 + " " + suit2);
                         String sendToHost = tokens.nextToken();
-                        //  Deck deck = new Deck();
                         for (Player player : playerInfo) {
                             if (player.getHostName().contains(sendToHost)) {
                                 System.out.println("cards: " + sendToHost + " " + card1 + " " + suit1 + " " + card2 + " " + suit2);
@@ -146,8 +144,15 @@ class ClientHandler implements Runnable {
                             }
                         }
                     }
-                }
-                else if(clientCommand.startsWith("endPhase")){
+                } else if (clientCommand.startsWith("endPhase")) {
+                    String host = tokens.nextToken();
+                    ArrayList<Card> cards = new ArrayList<>();
+                    while (tokens.hasMoreTokens()) {
+                        String cardRank = tokens.nextToken();
+                        String cardSuit = tokens.nextToken();
+                        cards.add(new Card(Integer.parseInt(cardSuit), Integer.parseInt(cardRank)));
+                    }
+                    this.playersObservable.addToBoard(cards);
                     ArrayList<Player> playerInfo = playersObservable.getPlayers();
                     int dealerIndex = 0;
                     for (int i = 0; i < playerInfo.size(); i++) {
@@ -156,11 +161,11 @@ class ClientHandler implements Runnable {
                             break;
                         }
                     }
+
                     this.playersObservable.setLastPlayerToBet("");
                     playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Check");
                     playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
-                }
-                else if(clientCommand.startsWith("endRound")){
+                } else if(clientCommand.startsWith("endRound")){
                     //TODO: DO we need logic regarding earnings here?
 
                     ArrayList<Player> playerInfo = playersObservable.getPlayers();
@@ -205,8 +210,9 @@ class ClientHandler implements Runnable {
                     if (action.equals("Bet")) {
                         String betAmount = tokens.nextToken(); // amount of $ bet
                         this.playersObservable.setLastAction(playerHost, action + " " + betAmount);
-                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action + " " + betAmount);
+                        Thread.sleep(100);
                         this.playersObservable.addToPot(Integer.parseInt(betAmount));
+                        Thread.sleep(100);
                         this.playersObservable.setLastPlayerToBet(playerHost);
                         this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(Integer.parseInt(betAmount));
                     } else if (action.equals("Call")) {
@@ -220,7 +226,6 @@ class ClientHandler implements Runnable {
                         this.playersObservable.setLastAction(playerHost, action);
                         this.playersObservable.getPlayers().get(playerIndex).setLastAction(action);
                     }
-
                 } else {
                     Socket dataSocket = new Socket(this.socket.getInetAddress(), port);
                     DataOutputStream dataOutToClient = new DataOutputStream(dataSocket.getOutputStream());

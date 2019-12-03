@@ -1,4 +1,7 @@
 import javax.swing.*;
+
+import game.Card;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -80,20 +83,7 @@ class PlayerPane extends JPanel {
     private Image getCardImage(Card card) {
         int cardNumber = card.rank();
         String suitNumber = Integer.toString(card.suit());
-        String cardLetter = "";
-
-        switch(suitNumber){
-            case "1":
-                cardLetter = "D";
-            case "2":
-                cardLetter = "H";
-            case "3":
-                cardLetter = "C";
-            case "4":
-                cardLetter = "S";
-            default:
-                break;
-        }
+        String cardLetter = card.suitLetter();
 
         try {
             return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(75, 100, Image.SCALE_SMOOTH);

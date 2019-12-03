@@ -13,12 +13,7 @@ public class BoardCards extends JPanel {
     private JLabel card1Slot, card2Slot, card3Slot, card4Slot, card5Slot;
     private ClientSession session;
 
-    public BoardCards(Card card1, Card card2, Card card3, Card card4, Card card5, ClientSession session, Integer state) {
-        this.card1 = card1;
-        this.card2 = card2;
-        this.card3 = card3;
-        this.card4 = card4;
-        this.card5 = card5;
+    public BoardCards(ClientSession session, Integer state) {
         this.session = session;
         this.setLayout(new GridBagLayout());
 
@@ -27,13 +22,30 @@ public class BoardCards extends JPanel {
         this.setBackground(new Color(12, 107, 17));
     }
 
+    public void flop(Card card1, Card card2, Card card3) {
+        this.card1 = card1;
+        this.card2 = card2;
+        this.card3 = card3;
+        displayBoardCards(0);
+    }
+
+    public void turn(Card card4) {
+        this.card4 = card4;
+        displayBoardCards(1);
+    }
+
+    public void river(Card card5) {
+        this.card5 = card5;
+        displayBoardCards(2);
+    }
+
     public void displayBoardCards(Integer state) {
         this.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
     
 
         // Flop state - Only the first three cards need to be displayed, hide the last two
-        if(state == 0){
+        if(state == 0) {
             this.card1Image = new ImageIcon(getCardImage(card1));
             this.card2Image = new ImageIcon(getCardImage(card2));
             this.card3Image = new ImageIcon(getCardImage(card3));

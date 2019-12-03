@@ -190,14 +190,14 @@ class SubServerHandler implements Runnable {
                         playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
                     }
                     CentralServer.broadcast(playerMessage);
-                }else if(clientCommand.startsWith("endPhase")){
+                } else if(clientCommand.startsWith("endPhase")){
                     //TODO: update cards on table
                     System.out.println("The phase has ended");
                     String message = this.socket.getPort() + " endPhase ";
                     CentralServer.broadcast(message);
                     phase++;
 
-                }else if(clientCommand.startsWith("endRound")){
+                } else if(clientCommand.startsWith("endRound")){
                     //TODO: Calculate the winner and their earnings, reset board
                     String winner = "";
                     float earnings = 0;

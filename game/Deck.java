@@ -7,9 +7,9 @@ public class Deck {
     Stack<Card> cards = new Stack<>();
 
     public Deck() {
-        for (Suit suit : Suit.values()) {
+        for (int s = 1; s <= 4; s++) {
             for (int i = 1; i <= 13; i++) {
-                this.cards.push(new Card(i, suit));
+                this.cards.push(new Card(s, i));
             }
         }
         shuffle();

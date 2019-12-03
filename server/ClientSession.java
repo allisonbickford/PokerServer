@@ -7,6 +7,8 @@ import java.text.*;
 import java.lang.*;
 import javax.swing.*;
 
+import game.Card;
+
 public class ClientSession {
     private int port;
     private int mutablePort;
@@ -167,6 +169,17 @@ public class ClientSession {
         this.mutablePort += 7;
         String gameHost = this.server.getObservable().getHost();
         String message = String.format("%d endRound %s\n",this.mutablePort, this.getHostName());
+        broadcast(message);
+    }
+
+    public void sendNextPhase(Card[] cards) {
+        this.mutablePort += 7;
+        String gameHost = this.server.getObservable().getHost();
+        String cardString = "";
+        for (Card card: cards) {
+            cardString += " " + card.rank() + " " + card.suit();
+        }
+        String message = String.format("%d endPhase %s %s\n", this.mutablePort, this.getHostName(), cardString);
         broadcast(message);
     }
 
