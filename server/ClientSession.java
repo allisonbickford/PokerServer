@@ -113,10 +113,17 @@ public class ClientSession {
         broadcast(message);
     }
 
-    public void sendDeckMessage(int card1, int suit1, int card2, int suit2, String hostName){
+    public void sendDeckMessage(Card card1, Card card2, String hostName){
         this.mutablePort += 7;
         String gameHost = this.server.getObservable().getHost();
-        String message = String.format("%d deck: %s Deck %d %d %d %d %s \n", this.mutablePort, this.getHostName(),card1,suit2,card2,suit2,hostName);
+        String message = String.format("%d deck: %s Deck %d %d %d %d %s \n", 
+            this.mutablePort,
+            this.getHostName(),
+            card1.rank(),
+            card1.suit(),
+            card2.rank(),
+            card2.suit(),
+            hostName);
         System.out.println(message);
         broadcastDeck(message);
     }
@@ -176,10 +183,31 @@ public class ClientSession {
         this.mutablePort += 7;
         String gameHost = this.server.getObservable().getHost();
         String cardString = "";
+        ArrayList<Card> cardArray = new ArrayList<>();
         for (Card card: cards) {
+            cardArray.add(card);
             cardString += " " + card.rank() + " " + card.suit();
         }
         String message = String.format("%d endPhase %s %s\n", this.mutablePort, this.getHostName(), cardString);
+        broadcast(message);
+        this.getObservable().addToBoard(cardArray);
+    }
+
+    public void sendScore(int score) {
+        try {
+            DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
+            centralDOS.writeBytes(String.format("score: %s %d", this.getHostName(), score));
+            centralDOS.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("There was a problem sending your score.");
+        }
+    }
+
+    public void sendCards(Card[] cards) {
+        this.mutablePort += 7;
+        String message = String.format("%d cards: %s %s %s %s %s\n", 
+            this.mutablePort, this.getHostName(), cards[0].suit(), cards[0].rank(), cards[1].suit(), cards[1].rank());
         broadcast(message);
     }
 

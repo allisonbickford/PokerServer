@@ -6,12 +6,15 @@ import java.util.*;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleEntry;;
 import java.util.regex.*;
 
 class CentralServer {
     private static Map<String, String> word = new LinkedHashMap<>(); // <"addr:port", username>
     private static Boolean gameRunning = false;
     private static String gameHost = "";
+    private static Entry<String, Integer> currentWinner = new AbstractMap.SimpleEntry<String, Integer>("", 0);
+    private static int scoresReceived = 0;
 
     public static void main(String argv[]) throws Exception {
         int port = 1200;
@@ -127,6 +130,27 @@ class CentralServer {
             }
         });
     }
+
+    public static void setWinner(Entry<String, Integer> winner) {
+        currentWinner = winner;
+    }
+
+    public static Entry getWinner() {
+        return currentWinner;
+    }
+
+    public static void incScoresReceived() {
+        scoresReceived++;
+    }
+
+    public static int getScoresReceived() {
+        return scoresReceived;
+    }
+
+    public static void clearScores() {
+        scoresReceived = 0;
+        currentWinner = new AbstractMap.SimpleEntry<String, Integer>("", 0);
+    }
 }
 
 class SubServerHandler implements Runnable {
@@ -161,79 +185,82 @@ class SubServerHandler implements Runnable {
                     break;
                 }
 
-                System.out.println("Received command: " + fromClient);
-                commands = fromClient.split(" ");
-                clientCommand = (commands[0]);
+                if (fromClient != null) {
+                    System.out.println("Received command: " + fromClient);
+                    commands = fromClient.split(" ");
+                    clientCommand = (commands[0]);
 
-                //dereg users
-                if (clientCommand.equals("close")) {
-                    System.out.println("Connection ended with victim " + this.socket.getPort());
-                    CentralServer.deregister(commands[1]);
-                    outToClient.close();
-                    this.socket.close();
-                    break;
-                } else if (clientCommand.startsWith("start")) {
-                    CentralServer.startGame(commands[1]);
-                    CentralServer.broadcast(this.socket.getPort() + " STARTING! Host: " + commands[1]);
-                } else if (clientCommand.startsWith("quit")) {
-                    if (commands[1] == CentralServer.getGameHost()) {
-                        CentralServer.endGame();
-                        CentralServer.broadcast("GAMEOVER");
+                    //dereg users
+                    if (clientCommand.equals("close")) {
+                        System.out.println("Connection ended with victim " + this.socket.getPort());
+                        CentralServer.deregister(commands[1]);
+                        outToClient.close();
+                        this.socket.close();
+                        break;
+                    } else if (clientCommand.startsWith("start")) {
+                        CentralServer.startGame(commands[1]);
+                        CentralServer.broadcast(this.socket.getPort() + " STARTING! Host: " + commands[1]);
+                    } else if (clientCommand.startsWith("quit")) {
+                        if (commands[1] == CentralServer.getGameHost()) {
+                            CentralServer.endGame();
+                            CentralServer.broadcast("GAMEOVER");
+                        }
+                    } else if (clientCommand.startsWith("newuser:")) {
+                        username = commands[1];
+                        CentralServer.createword(username, commands[2]);
+                        System.out.println("Registered new player " + username);
+                        Thread.sleep(250); // wait for server to open
+                        String playerMessage = String.format("%d players:", this.socket.getPort());
+                        for (Entry player : CentralServer.getPlayers()) {
+                            playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
+                        }
+                        CentralServer.broadcast(playerMessage);
+                    } else if(clientCommand.startsWith("endPhase")){
+                        String message = this.socket.getPort() + " endPhase ";
+                        CentralServer.broadcast(message);
+                        phase++;
+                    } else if(clientCommand.startsWith("score")){
+                        String hostName = commands[1];
+                        int score = Integer.parseInt(commands[2]);
+                        System.out.println(CentralServer.getScoresReceived());
+                        if ((int)CentralServer.getWinner().getValue() < score) {
+                            CentralServer.setWinner(new SimpleEntry<String, Integer>(hostName, score));
+                        }
+                        CentralServer.incScoresReceived();
+                        
+                        if (CentralServer.getScoresReceived() == CentralServer.getNumberOfPlayers()) {
+                            String message = String.format("%d winner: %s", this.socket.getPort(), CentralServer.getWinner().getKey());
+                            CentralServer.broadcast(message);
+                            CentralServer.clearScores();
+                        }
+                    } else if(clientCommand.startsWith("bet:")){
+                        //1 = user 2 == bet amount
+                        System.out.println("New bet from: " + commands[1] +" for $"+ commands[2]);
+                        String message = this.socket.getPort() +" bet " + commands[1] + " " + commands[2];
+                        CentralServer.broadcast(message);
+
+                    }else if(clientCommand.startsWith("raise:")){
+                        //1 = user 2 == bet amount
+                        System.out.println("New raise from: " + commands[1] +" for $"+ commands[2]);
+                        String message = this.socket.getPort() +" raise " + commands[1] + " " + commands[2];
+                        CentralServer.broadcast(message);
                     }
-                } else if (clientCommand.startsWith("newuser:")) {
-                    username = commands[1];
-                    CentralServer.createword(username, commands[2]);
-                    System.out.println("Registered new player " + username);
-                    Thread.sleep(250); // wait for server to open
-                    String playerMessage = String.format("%d players:", this.socket.getPort());
-                    for (Entry player : CentralServer.getPlayers()) {
-                        playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
+                    else if(clientCommand.startsWith("check:")){
+                        //1 = user 2 == bet amount
+                        System.out.println("Check from: " + commands[1]);
+                        String message = this.socket.getPort() +" check " + commands[1];
+                        CentralServer.broadcast(message);
+                    }else if(clientCommand.startsWith("call:")){
+                        //1 = user 2 == bet amount
+                        System.out.println("call from: " + commands[1]);
+                        String message = this.socket.getPort() +" call " + commands[1];
+                        CentralServer.broadcast(message);
+                    }else if(clientCommand.startsWith("fold:")){
+                        //1 = user 2 == bet amount
+                        System.out.println("fold from: " + commands[1]);
+                        String message = this.socket.getPort() +" fold " + commands[1];
+                        CentralServer.broadcast(message);
                     }
-                    CentralServer.broadcast(playerMessage);
-                } else if(clientCommand.startsWith("endPhase")){
-                    //TODO: update cards on table
-                    System.out.println("The phase has ended");
-                    String message = this.socket.getPort() + " endPhase ";
-                    CentralServer.broadcast(message);
-                    phase++;
-
-                } else if(clientCommand.startsWith("endRound")){
-                    //TODO: Calculate the winner and their earnings, reset board
-                    String winner = "";
-                    float earnings = 0;
-
-                    System.out.println("The round has ended. Winner: " + winner + " won $" + earnings);
-                    String message = this.socket.getPort() + " endRound " + winner + " " + earnings;
-                    CentralServer.broadcast(message);
-                    phase = 0;
-
-                }else if(clientCommand.startsWith("bet:")){
-                    //1 = user 2 == bet amount
-                    System.out.println("New bet from: " + commands[1] +" for $"+ commands[2]);
-                    String message = this.socket.getPort() +" bet " + commands[1] + " " + commands[2];
-                    CentralServer.broadcast(message);
-
-                }else if(clientCommand.startsWith("raise:")){
-                    //1 = user 2 == bet amount
-                    System.out.println("New raise from: " + commands[1] +" for $"+ commands[2]);
-                    String message = this.socket.getPort() +" raise " + commands[1] + " " + commands[2];
-                    CentralServer.broadcast(message);
-                }
-                else if(clientCommand.startsWith("check:")){
-                    //1 = user 2 == bet amount
-                    System.out.println("Check from: " + commands[1]);
-                    String message = this.socket.getPort() +" check " + commands[1];
-                    CentralServer.broadcast(message);
-                }else if(clientCommand.startsWith("call:")){
-                    //1 = user 2 == bet amount
-                    System.out.println("call from: " + commands[1]);
-                    String message = this.socket.getPort() +" call " + commands[1];
-                    CentralServer.broadcast(message);
-                }else if(clientCommand.startsWith("fold:")){
-                    //1 = user 2 == bet amount
-                    System.out.println("fold from: " + commands[1]);
-                    String message = this.socket.getPort() +" fold " + commands[1];
-                    CentralServer.broadcast(message);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

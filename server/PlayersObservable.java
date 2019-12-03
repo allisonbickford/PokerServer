@@ -14,9 +14,10 @@ public class PlayersObservable extends Observable {
   private Integer currentPot = new Integer(0);
   private Entry<String, String> lastAction = new AbstractMap.SimpleEntry<String, String>("", "Small Blind - $1");
   private String lastPlayerToBet = "";
-  private Integer phase = 0;
+  private Integer phase = -1;
   private Boolean endRound = false;
   private ArrayList<Card> board = new ArrayList<>();
+  private String roundWinner = "";
 
   public void setHost(String host) {
     this.gameHost = host;
@@ -31,15 +32,14 @@ public class PlayersObservable extends Observable {
   }
 
   public boolean nextPhase(){
-    if(this.phase < 2) {
+    if (this.phase < 2) {
       this.phase++;
       this.endRound = false;
       setChanged();
       notifyObservers("phase");
-    }
-    else{
+    } else {
       this.endRound = true;
-      this.phase = 0;
+      this.phase++;
       setChanged();
       notifyObservers("endRound");
     }
@@ -59,27 +59,29 @@ public class PlayersObservable extends Observable {
   }
 
   public void setLastAction(String hostName, String action) {
-    this.lastAction = new AbstractMap.SimpleEntry<String, String>(hostName, action);
-    // get player who just made an action
-    int lastPlayerIndex = 0;
-    for (int i = 0; i < this.players.size(); i++) {
-      if (this.players.get(i).getHostName().equals(hostName)) {
-        lastPlayerIndex = i;
-        break;
+    synchronized (this) {
+      this.lastAction = new AbstractMap.SimpleEntry<String, String>(hostName, action);
+      // get player who just made an action
+      int lastPlayerIndex = 0;
+      for (int i = 0; i < this.players.size(); i++) {
+        if (this.players.get(i).getHostName().equals(hostName)) {
+          lastPlayerIndex = i;
+          break;
+        }
       }
+      this.players.get(lastPlayerIndex).setLastAction(action);
+      while (this.players.get(lastPlayerIndex).hasFolded()) { // skip people who folded
+        lastPlayerIndex = (lastPlayerIndex + 1) % this.players.size();
+      }
+      this.players.get(lastPlayerIndex).setTurn(false);
+      // get index of next person to play
+      int nextPlayerIndex = (lastPlayerIndex + 1) % this.players.size();
+      while (this.players.get(nextPlayerIndex).hasFolded()) { // skip folders
+        nextPlayerIndex = (nextPlayerIndex + 1) % this.players.size();
+      }
+      // turn goes to next player
+      this.players.get(nextPlayerIndex).setTurn(true);
     }
-    this.players.get(lastPlayerIndex).setLastAction(action);
-    while (this.players.get(lastPlayerIndex).hasFolded()) { // skip people who folded
-      lastPlayerIndex = (lastPlayerIndex + 1) % this.players.size();
-    }
-    this.players.get(lastPlayerIndex).setTurn(false);
-    // get index of next person to play
-    int nextPlayerIndex = (lastPlayerIndex + 1) % this.players.size();
-    while (this.players.get(nextPlayerIndex).hasFolded()) { // skip folders
-      nextPlayerIndex = (nextPlayerIndex + 1) % this.players.size();
-    }
-    // turn goes to next player
-    this.players.get(nextPlayerIndex).setTurn(true);
     setChanged();
     notifyObservers("action");
   }
@@ -100,6 +102,14 @@ public class PlayersObservable extends Observable {
     this.board.clear();
     setChanged();
     notifyObservers();
+  }
+
+  public void setRoundWinner(String hostName) {
+    this.roundWinner = hostName;
+    this.board.clear();
+    this.phase = 0;
+    setChanged();
+    notifyObservers("winner");
   }
 
   public String getHost() {
@@ -144,5 +154,9 @@ public class PlayersObservable extends Observable {
 
   public int getBoardSize() {
     return this.board.size();
+  }
+
+  public String getRoundWinner() {
+    return this.roundWinner;
   }
 }

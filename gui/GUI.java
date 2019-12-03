@@ -35,8 +35,6 @@ public class GUI extends JFrame implements ActionListener, Observer  {
 
     // Initial state of the cards:
     // Flop = 0, Turn = 1, River = 2, Default = 3
-    private Integer boardCardState = 3;
-
     public GUI() {
         super("Poker");
         initializeRegGUI();
@@ -65,18 +63,20 @@ public class GUI extends JFrame implements ActionListener, Observer  {
         cons.gridwidth = 3;
         this.gamePanel.add(playersPane, cons);
         
+        JLabel myLabel = new JLabel("Me: " + this.myName);
         cons.gridx = 0;
         cons.gridy = 4;
         cons.gridheight = 1;
         cons.gridwidth = 1;
         cons.anchor = GridBagConstraints.PAGE_START;
-        this.gamePanel.add(new JLabel("Me: " + this.myName), cons);
+        myLabel.setForeground(new Color(255, 255, 255));
+        this.gamePanel.add(myLabel, cons);
         
         this.potLabel = new JLabel("Pot: $0");
-        this.potLabel.setOpaque(true);
-        this.potLabel.setBackground(new Color(255, 255, 255));
-        cons.gridx = 2;
+        this.potLabel.setForeground(new Color(255, 255, 255));
+        cons.gridx = 1;
         cons.gridy = 7;
+        cons.gridwidth = 2;
         cons.anchor = GridBagConstraints.PAGE_END;
         this.gamePanel.add(potLabel, cons);
         for (Player players: playerInfo) {
@@ -93,7 +93,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
         cons.gridwidth = 3;
         this.gamePanel.add(myPanel, cons);
 
-        boardCardPanel = new BoardCards(clientSession, boardCardState);
+        boardCardPanel = new BoardCards(clientSession, 3);
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.gridx = 0;
         cons.gridy = 5;
@@ -314,7 +314,7 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                                 }
                                 Card first = deck.draw();
                                 Card second = deck.draw();
-                                this.clientSession.sendDeckMessage(first.rank(), first.suit(), second.rank(), second.suit(), players.getHostName());
+                                this.clientSession.sendDeckMessage(first, second, players.getHostName());
                             }
                             Card dfirst = deck.draw();
                             Card dsecond = deck.draw();
@@ -337,29 +337,24 @@ public class GUI extends JFrame implements ActionListener, Observer  {
             int endOfRoundIndex = 0;
             String turnHostName = "";
             for (int i = 0; i < this.observable.getPlayers().size(); i++) {
-                if (this.observable.getPlayers().get(i).isTurn()) {
-                    turnHostName = this.observable.getPlayers().get(i).getHostName();
+                Player tmpPlayer = this.observable.getPlayers().get(i);
+                if (tmpPlayer.isTurn()) {
+                    turnHostName = tmpPlayer.getHostName();
                 }
-                if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
+                if (tmpPlayer.getHostName().equals(this.clientSession.getHostName())) {
                     myIndex = i;
                 }
-                if (this.observable.getPlayers().size() > 2 && this.observable.getPlayers().get(i).getRole().contains("SB")) {
+                if (this.observable.getPlayers().size() > 2 && tmpPlayer.getRole().contains("SB")) {
                     endOfRoundIndex = i;
-                } else if (this.observable.getPlayers().size() == 2 && this.observable.getPlayers().get(i).getRole().contains("D")) {
+                } else if (this.observable.getPlayers().size() == 2 && tmpPlayer.getRole().contains("D")) {
                     endOfRoundIndex = i;
                 }
             }
 
-            if((this.observable.getLastPlayerToBet() == this.observable.getPlayers().get(myIndex).getHostName())
+            if((this.observable.getLastPlayerToBet().equals(this.observable.getPlayers().get(myIndex).getHostName()))
                     && this.observable.getPlayers().get(myIndex).isTurn()) {
-                    if (this.observable.getPhase() == 0) {
-                        this.clientSession.sendNextPhase(new Card[]{this.deck.draw(), this.deck.draw(), this.deck.draw()});
-                    } else if (this.observable.getPhase() < 2) {
-                        this.clientSession.sendNextPhase(new Card[]{this.deck.draw()});
-                    }
                     this.observable.nextPhase();
-            }
-            else {
+            } else {
                 if (this.observable.getLastAction().getValue().toString().contains("Check")) {
                     myPanel.actionAfterCheck();
                 } else if (this.observable.getLastPlayerToBet().equals(turnHostName)) {
@@ -369,23 +364,6 @@ public class GUI extends JFrame implements ActionListener, Observer  {
                         this.observable.getLastAction().getValue().toString().contains("Call")) {
                     myPanel.actionAfterBet();
                 }
-                for (int i = 0; i < this.observable.getPlayers().size(); i++) {
-                    if (this.observable.getPlayers().size() > 2 && this.observable.getPlayers().get(i).getRole().contains("SB")) {
-                        endOfRoundIndex = i;
-                    } else if (this.observable.getPlayers().size() == 2 && this.observable.getPlayers().get(i).getRole().contains("D")) {
-                        endOfRoundIndex = i;
-                    }
-                }
-            }
-
-            if (this.observable.getLastAction().getValue().toString().contains("Check")) {
-                myPanel.actionAfterCheck();
-            } else if (this.observable.getLastPlayerToBet().equals(turnHostName)) {
-                myPanel.actionAfterCheck();
-                this.observable.setLastPlayerToBet(this.observable.getPlayers().get(endOfRoundIndex).getHostName());
-            } else if (this.observable.getLastAction().getValue().toString().contains("Bet") ||
-                        this.observable.getLastAction().getValue().toString().contains("Call")) {
-                myPanel.actionAfterBet();
             }
 
             if (this.observable.getPlayers().get(myIndex).isTurn()) {
@@ -396,17 +374,99 @@ public class GUI extends JFrame implements ActionListener, Observer  {
             ((PlayersTableModel) this.playersTable.getModel()).fireTableDataChanged();
         } else if (arg.toString().equals("pot")) { // pot changes
             potLabel.setText("Pot: $" + this.observable.getPot().toString());
-        }
-        else if(arg.toString().equals("phase")){
+        } else if(arg.toString().equals("phase")){
+            int myIndex = 0;
+            for (int i = 0; i < this.observable.getPlayers().size(); i++) {
+                if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
+                    myIndex = i;
+                    break;
+                }
+            }
+
+            if (this.observable.getPlayers().get(myIndex).getRole().contains("SB")) {
+                if (this.observable.getPhase() == 0) {
+                    Card firstCard = this.deck.draw();
+                    Card secondCard = this.deck.draw();
+                    Card thirdCard = this.deck.draw();
+                    this.clientSession.sendNextPhase(new Card[]{firstCard, secondCard, thirdCard});
+                } else if (this.observable.getPhase() <= 2) {
+                    Card nextCard = this.deck.draw();
+                    this.clientSession.sendNextPhase(new Card[]{nextCard});
+                }
+            }
         } else if (arg.toString().equals("board")) {
             ArrayList<Card> board = this.observable.getBoard();
             if (this.observable.getBoardSize() == 3) {
                 this.boardCardPanel.flop(board.get(0), board.get(1), board.get(2));
             } else if (this.observable.getBoardSize() == 4) {
                 this.boardCardPanel.turn(board.get(3));
-            } else {
+            } else if (this.observable.getBoardSize() == 5) {
                 this.boardCardPanel.river(board.get(4));
             }
+        } else if (arg.toString().equals("endRound")) {
+            System.out.println("attempting to end round");
+            int myIndex = 0;
+            for (int i = 0; i < this.observable.getPlayers().size(); i++) {
+                if (this.observable.getPlayers().get(i).getHostName().equals(this.clientSession.getHostName())) {
+                    myIndex = i;
+                    break;
+                }
+            }
+            
+            if (!this.observable.getPlayers().get(myIndex).hasFolded()) {
+                Card[] myCards = this.observable.getPlayers().get(myIndex).getCards();
+                Card[] allCards = new Card[]{
+                    this.observable.getBoard().get(0),
+                    this.observable.getBoard().get(1),
+                    this.observable.getBoard().get(2),
+                    this.observable.getBoard().get(3),
+                    this.observable.getBoard().get(4),
+                    myCards[0],
+                    myCards[1]
+                };
+                int maxScore = permute(allCards, 0, 0, allCards.length, 5);
+                System.out.println(maxScore);
+                this.clientSession.sendScore(maxScore);
+                this.clientSession.sendCards(myCards);
+            } else {
+                this.clientSession.sendScore(-100);
+            }
+            myPanel.stop();
+        } else if (arg.toString().equals("winner")) {
+            for (Player player: this.observable.getPlayers()) {
+                if (player.getHostName().equals(this.observable.getRoundWinner())) {
+                    JOptionPane.showMessageDialog(this.frame, "Winner of the round was " + player.getName());
+                }
+            }
+            this.boardCardPanel = new BoardCards(this.clientSession, 3);
         }
     }
+
+    // Function to print all distinct combinations of length k
+	public static int permute(Card[] A, int currentMax, int i, int n, int k)
+	{
+		// invalid input
+		if (k > n) {
+			return 0;
+		}
+
+		// base case: combination size is k
+		if (k == 0) {
+			return currentMax;
+		}
+
+		// start from next index till last index
+		for (int j = i; j < n; j++)
+		{
+			// add current element A[j] to solution & recur for next index
+            // (j+1) with one less element (k-1)
+            if (HandEvaluator.valueHand(A) > currentMax) {
+                return permute(A, HandEvaluator.valueHand(A) , j + 1, n, k - 1);
+            }
+            return permute(A, currentMax, j + 1, n, k - 1);
+
+        }
+        
+        return 0;
+	}
 }

@@ -82,7 +82,6 @@ class PlayerPane extends JPanel {
 
     private Image getCardImage(Card card) {
         int cardNumber = card.rank();
-        String suitNumber = Integer.toString(card.suit());
         String cardLetter = card.suitLetter();
 
         try {

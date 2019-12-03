@@ -18,8 +18,6 @@ package game;
    ----------------------------------------------------------- */
 
    public class Card {
-    private int number;
-    private Suit suit;
     public static final int SPADE = 4;
     public static final int HEART = 3;
     public static final int CLUB = 2;
@@ -47,11 +45,9 @@ package game;
     public Card(int suit, int rank) {
         if (rank == 1){
             cardRank = 14;     // Give Ace the rank 14
-            this.number = 14;
         }
-        else{
+        else {
             cardRank = (byte) rank;
-            this.number = rank;
         }
         cardSuit = (byte) suit;
     }
@@ -59,13 +55,10 @@ package game;
     public Card(int number, Suit suit){
         if (number == 1){
             cardRank = 14;
-            this.number = 14;
         }
         else{
             cardRank = (byte) number;
-            this.number = number;
         }
-            
         
         switch(suit){
             case DIAMONDS:
@@ -80,7 +73,7 @@ package game;
     }
 
     public int suit() {
-        return (cardSuit);         
+        return (cardSuit);
     }
 
     public String suitStr() {

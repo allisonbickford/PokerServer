@@ -144,6 +144,21 @@ class ClientHandler implements Runnable {
                             }
                         }
                     }
+                } else if (clientCommand.startsWith("winner")) {
+                    String host = tokens.nextToken();
+                    this.playersObservable.setRoundWinner(host);
+                } else if (clientCommand.startsWith("cards:")) {
+                    String host = tokens.nextToken();
+                    Card card1 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
+                    Card card2 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
+
+                    for (Player player : this.playersObservable.getPlayers()) {
+                        if (player.getHostName().contains(host)) {
+                            player.setCards(card1, card2);
+                            player.showCards();
+                            break;
+                        }
+                    }
                 } else if (clientCommand.startsWith("endPhase")) {
                     String host = tokens.nextToken();
                     ArrayList<Card> cards = new ArrayList<>();
@@ -153,18 +168,7 @@ class ClientHandler implements Runnable {
                         cards.add(new Card(Integer.parseInt(cardSuit), Integer.parseInt(cardRank)));
                     }
                     this.playersObservable.addToBoard(cards);
-                    ArrayList<Player> playerInfo = playersObservable.getPlayers();
-                    int dealerIndex = 0;
-                    for (int i = 0; i < playerInfo.size(); i++) {
-                        if (playerInfo.get(i).getRole().equals("D")) {
-                            dealerIndex = i;
-                            break;
-                        }
-                    }
-
-                    this.playersObservable.setLastPlayerToBet("");
-                    playerInfo.get((dealerIndex + 1) % playerInfo.size()).setLastAction("Check");
-                    playersObservable.setLastPlayerToBet(playerInfo.get((dealerIndex + 2) % playerInfo.size()).getHostName());
+                    this.playersObservable.nextPhase();
                 } else if(clientCommand.startsWith("endRound")){
                     //TODO: DO we need logic regarding earnings here?
 
@@ -210,9 +214,8 @@ class ClientHandler implements Runnable {
                     if (action.equals("Bet")) {
                         String betAmount = tokens.nextToken(); // amount of $ bet
                         this.playersObservable.setLastAction(playerHost, action + " " + betAmount);
-                        Thread.sleep(100);
+                        this.playersObservable.getPlayers().get(playerIndex).setLastAction(action + " $" + betAmount);
                         this.playersObservable.addToPot(Integer.parseInt(betAmount));
-                        Thread.sleep(100);
                         this.playersObservable.setLastPlayerToBet(playerHost);
                         this.playersObservable.getPlayers().get(playerIndex).setCurrentBet(Integer.parseInt(betAmount));
                     } else if (action.equals("Call")) {

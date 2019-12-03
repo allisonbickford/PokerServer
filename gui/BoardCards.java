@@ -42,7 +42,7 @@ public class BoardCards extends JPanel {
     public void displayBoardCards(Integer state) {
         this.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
-    
+        this.removeAll();
 
         // Flop state - Only the first three cards need to be displayed, hide the last two
         if(state == 0) {
@@ -129,6 +129,8 @@ public class BoardCards extends JPanel {
             addCardsToBoard(cons);
         }
 
+        this.revalidate();
+        this.repaint();
         this.setBackground(new Color(12, 107, 17));
     }
 
@@ -168,18 +170,7 @@ public class BoardCards extends JPanel {
     private Image getCardImage(Card card) {
         int cardNumber = card.rank();
         String suitnumber = Integer.toString(card.suit());
-        String cardLetter = "";
-
-        switch(suitnumber){
-            case "1":
-                cardLetter = "D";
-            case "2":
-                cardLetter = "H";
-            case "3":
-                cardLetter = "C";
-            case "4":
-                cardLetter = "S";
-        }
+        String cardLetter = card.suitLetter();
 
         try {
             return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(75, 100, Image.SCALE_SMOOTH);

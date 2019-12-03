@@ -86,13 +86,8 @@ class PlayerPane extends JPanel {
     }
 
     private Image getCardImage(Card card) {
-
         int cardNumber = card.rank();
         String cardLetter = card.suitLetter();
-        if(cardNumber ==14){
-            cardNumber =1;
-        }
-        System.out.println("card: "+ cardNumber +" "+ cardLetter);
         try {
             return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(75, 100, Image.SCALE_SMOOTH);
         } catch (Exception e) {
