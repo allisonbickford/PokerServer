@@ -44,11 +44,11 @@ public class Game {
             this.endOfRoundIndex = dealerIndex;
         } else {
             this.players.get(dealerIndex).setRole("D");
-            
+
             /** set up small blind */
             this.players.get((dealerIndex + 1) % this.players.size()).setRole("SB");
             this.players.get((dealerIndex + 1) % this.players.size()).setLastAction("Small Blind - $" + (bigBlind / 2));
-            this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind / 2);            
+            this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind / 2);
             this.players.get((dealerIndex + 1) % this.players.size()).setCurrentBet(bigBlind / 2);
 
             /** set up big blind */
@@ -105,21 +105,14 @@ public class Game {
         int playerIndex = findUserIndex(host);
         this.players.get(playerIndex).fold();
         this.players.get(playerIndex).setLastAction("Fold");
-        
+
         if (playersNotFolded() == 1) {
             this.currentPhase = Phase.END;
-            for (Player player: this.players) {
-                if (!player.hasFolded()) {
-                    this.disperseWinnings(player.getHostName());
-                    this.reset();
-                    break;
-                }
-            }
+
         } else {
             this.nextTurn();
         }
     }
-
     public void nextTurn() {
         for (int i = 0; i < this.players.size(); i++) {
             Player tmpPlayer = this.players.get(i);
@@ -143,12 +136,10 @@ public class Game {
             }
         }
         this.players.get(turnIndex).setTurn(true);
-
         if (turnIndex == endOfRoundIndex) {
             endOfPhase = true;
         }
     }
-    
     public void nextPhase() {
         endOfPhase = false;
         currentBet = 0;
@@ -165,7 +156,7 @@ public class Game {
             case RIVER:
                 this.currentPhase = Phase.END;
                 break;
-            default: 
+            default:
                 this.currentPhase = Phase.PREFLOP;
                 break;
         }
@@ -173,35 +164,35 @@ public class Game {
 
     public int getScore(Card[] cards) {
         Card[] allCards = new Card[]{
-            cards[0],
-            cards[1],
-            board.get(0),
-            board.get(1),
-            board.get(2),
-            board.get(3),
-            board.get(4)
+                cards[0],
+                cards[1],
+                board.get(0),
+                board.get(1),
+                board.get(2),
+                board.get(3),
+                board.get(4)
         };
         int maxScore = permute(allCards, 0, 0, allCards.length, 5);
         return maxScore;
     }
 
     // Function to print all distinct combinations of length k
-	public static int permute(Card[] A, int currentMax, int i, int n, int k)
-	{
-		// invalid input
-		if (k > n) {
-			return 0;
-		}
+    public static int permute(Card[] A, int currentMax, int i, int n, int k)
+    {
+        // invalid input
+        if (k > n) {
+            return 0;
+        }
 
-		// base case: combination size is k
-		if (k == 0) {
-			return currentMax;
-		}
+        // base case: combination size is k
+        if (k == 0) {
+            return currentMax;
+        }
 
-		// start from next index till last index
-		for (int j = i; j < n; j++)
-		{
-			// add current element A[j] to solution & recur for next index
+        // start from next index till last index
+        for (int j = i; j < n; j++)
+        {
+            // add current element A[j] to solution & recur for next index
             // (j+1) with one less element (k-1)
             if (HandEvaluator.valueHand(A) > currentMax) {
                 return permute(A, HandEvaluator.valueHand(A) , j + 1, n, k - 1);
@@ -211,7 +202,7 @@ public class Game {
         }
         return 0;
     }
-    
+
     public void disperseWinnings(String winnerHostName) {
         int winnerIndex = findUserIndex(winnerHostName);
         this.players.get(winnerIndex).addMoney(this.pot);
@@ -234,7 +225,7 @@ public class Game {
         } else {
             this.players.get(dealerIndex).setRole("D");
             this.players.get((dealerIndex + 1) % this.players.size()).setRole("SB");
-            this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind / 2);            
+            this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind / 2);
             this.players.get((dealerIndex + 2) % this.players.size()).setRole("BB");
             this.players.get((dealerIndex + 1) % this.players.size()).removeMoney(bigBlind);
             this.turnIndex = (dealerIndex + 3) % this.players.size();
