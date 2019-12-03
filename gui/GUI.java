@@ -1,11 +1,8 @@
 package gui;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.Map.Entry;
@@ -29,6 +26,10 @@ public class GUI extends JFrame implements ActionListener, Observer {
     JFrame frame;
     PlayersObservable observable = null;
     private String myName = "";
+
+    // Initial state of the cards:
+    // Flop = 0, Turn = 1, River = 2, Default = 3
+    private Integer boardCardState = 3;
 
     public GUI() {
         super("Poker");
@@ -96,7 +97,7 @@ public class GUI extends JFrame implements ActionListener, Observer {
         cons.gridwidth = 3;
         this.gamePanel.add(myPanel, cons);
 
-        boardCardPanel = new BoardCards(boardCard1, boardCard2, boardCard3, boardCard4, boardCard5, clientSession);
+        boardCardPanel = new BoardCards(boardCard1, boardCard2, boardCard3, boardCard4, boardCard5, clientSession, boardCardState);
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.gridx = 0;
         cons.gridy = 4;
