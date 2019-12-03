@@ -111,6 +111,34 @@ public class ClientSession {
         broadcast(message);
     }
 
+    public void sendDeckMessage(int card1, int suit1, int card2, int suit2, String hostName){
+        this.mutablePort += 7;
+        String gameHost = this.server.getObservable().getHost();
+        String message = String.format("%d deck: %s Deck %d %d %d %d %s \n", this.mutablePort, this.getHostName(),card1,suit2,card2,suit2,hostName);
+        System.out.println(message);
+        broadcastDeck(message);
+    }
+
+    public void broadcastDeck(String message){
+        String[] commands;
+        commands = message.split(" ");
+        for (Player player: this.getObservable().getPlayers()) {
+            if (player.getHostName().contains(commands[2])) { continue; }
+            if(player.getHostName().contains(commands[8])){
+                String[] serverInfo = player.getHostName().split(":");
+            try {
+                Socket tmpSocket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
+                DataOutputStream dos = new DataOutputStream(tmpSocket.getOutputStream());
+                dos.writeBytes(message);
+                dos.flush();
+                dos.close();
+                tmpSocket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        }
+    }
     public void sendFoldMessage() {
         this.mutablePort += 7;
         String gameHost = this.server.getObservable().getHost();
@@ -126,6 +154,20 @@ public class ClientSession {
             }
         }
         this.getObservable().getPlayers().get(myIndex).fold();
+    }
+
+    public void endPhase() {
+        this.mutablePort += 7;
+        String gameHost = this.server.getObservable().getHost();
+        String message = String.format("%d endPhase %s\n",this.mutablePort, this.getHostName());
+        broadcast(message);
+    }
+
+    public void endRound() {
+        this.mutablePort += 7;
+        String gameHost = this.server.getObservable().getHost();
+        String message = String.format("%d endRound %s\n",this.mutablePort, this.getHostName());
+        broadcast(message);
     }
 
     //closes client session

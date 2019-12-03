@@ -6,12 +6,17 @@ import java.util.Map.Entry;
 import java.util.Map;
 import java.util.AbstractMap;
 
+import game.Card;
+
 public class PlayersObservable extends Observable {
   private String gameHost = "";
   private ArrayList<Player> players = new ArrayList<>();
   private Integer currentPot = new Integer(0);
   private Entry<String, String> lastAction = new AbstractMap.SimpleEntry<String, String>("", "Small Blind - $1");
   private String lastPlayerToBet = "";
+  private Integer phase = 0;
+  private Boolean endRound = false;
+  private Card[] board = new Card[5];
 
   public void setHost(String host) {
     this.gameHost = host;
@@ -23,6 +28,22 @@ public class PlayersObservable extends Observable {
     this.players = players;
     setChanged();
     notifyObservers("players");
+  }
+
+  public boolean nextPhase(){
+    if(this.phase < 2) {
+      this.phase++;
+      this.endRound = false;
+      setChanged();
+      notifyObservers("phase");
+    }
+    else{
+      this.endRound = true;
+      this.phase = 0;
+      setChanged();
+      notifyObservers("endRound");
+    }
+    return endRound;
   }
 
   public void setPot(int money) {
@@ -48,7 +69,6 @@ public class PlayersObservable extends Observable {
       }
     }
     this.players.get(lastPlayerIndex).setLastAction(action);
-    
     while (this.players.get(lastPlayerIndex).hasFolded()) { // skip people who folded
       lastPlayerIndex = (lastPlayerIndex + 1) % this.players.size();
     }
@@ -97,6 +117,8 @@ public class PlayersObservable extends Observable {
   public String getLastPlayerToBet() {
     return this.lastPlayerToBet;
   }
+
+  public Integer getPhase() { return this.phase; }
 
   public int getHighestBet() {
     return Integer.parseInt(

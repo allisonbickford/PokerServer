@@ -2,7 +2,9 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
+import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import game.*;
@@ -83,23 +85,14 @@ class PlayerPane extends JPanel {
         this.setBackground(new Color(12, 107, 17));
     }
 
-
     private Image getCardImage(Card card) {
+
         int cardNumber = card.rank();
-        String suitnumber = Integer.toString(card.suit());
-        String cardLetter = "";
-
-        switch(suitnumber){
-            case "1":
-                cardLetter = "D";
-            case "2":
-                cardLetter = "H";
-            case "3":
-                cardLetter = "C";
-            case "4":
-                cardLetter = "S";
+        String cardLetter = card.suitStr().toString().substring(0,1);
+        if(cardNumber ==14){
+            cardNumber =1;
         }
-
+        System.out.println("card: "+ cardNumber +" "+ cardLetter);
         try {
             return ImageIO.read(new File("./CardImages/" + cardNumber + cardLetter + ".png")).getScaledInstance(75, 100, Image.SCALE_SMOOTH);
         } catch (Exception e) {
