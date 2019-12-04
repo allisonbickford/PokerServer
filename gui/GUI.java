@@ -1,21 +1,24 @@
 package gui;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-
 import java.awt.*;
-
-import java.awt.event.*;
-import java.net.UnknownHostException;
 import java.util.*;
-import java.util.Map.Entry;
-
 import server.ClientSession;
 import server.Player;
-import server.PlayersObservable;
-import game.*;
 
+
+/**********************************************************************
+Graphical user interface used to represent a game lobby. Once a client
+registers their name and connects to the central server, their name
+will appear in a lobby list along with any other players that are
+connected to the central server.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class GUI extends JFrame {
     private GameGUI gameGUI;
     private JPanel lobbyPanel = new JPanel();

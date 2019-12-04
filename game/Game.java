@@ -1,18 +1,24 @@
 package game;
 
 import java.util.ArrayList;
-
 import game.HandEvaluator;
 import server.Player;
 
-enum Phase {
-    PREFLOP,
-    FLOP,
-    TURN,
-    RIVER,
-    END
-}
 
+/**********************************************************************
+Responsible for handling the game logic for a standard Texas Hold'em
+game of poker. Some functionality includes:
+    - Betting, folding, raising
+    - Evaluation of hand to determine a winner
+    - Changing phases between flop, turn, and river
+    - Chaning the turn of each player
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class Game {
     private ArrayList<Player> players;
     private int pot = 0;
@@ -320,4 +326,12 @@ public class Game {
         return this.players.get(this.turnIndex).getHostName();
     }
 
+}
+
+enum Phase {
+    PREFLOP,
+    FLOP,
+    TURN,
+    RIVER,
+    END
 }

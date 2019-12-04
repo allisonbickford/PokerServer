@@ -4,10 +4,22 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.event.TableModelEvent;
 import java.util.ArrayList;
-
 import server.Player;
 import gui.CardCellRenderer;
 
+
+/**********************************************************************
+This class is used to manage the data used in a table that is shown
+on the user interface. The table displays a player's name, money,
+cards, and their last action. Multiple players can be displayed in the
+table with the help of this class.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class PlayersTableModel extends AbstractTableModel implements TableModelListener {
     public static final String[] columnHeaders = {"Player Name", "Money", "Cards", "Last Action"};
     public ArrayList<Player> players = new ArrayList<>();

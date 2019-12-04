@@ -3,12 +3,22 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.Map.Entry;
-
 import game.Deck;
 import game.Card;
 import game.Game;
 
+
+/**********************************************************************
+Used to handle information about the current game state. Information
+is sent to and from the central server to this update the current state
+of the game.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class Server implements Runnable {
     public int port;
     public String address;
@@ -61,6 +71,17 @@ public class Server implements Runnable {
     }
 }
 
+
+/**********************************************************************
+Used to handle information about the client. Other actions that take
+place in a game of poker are monitored using this class
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 class ClientHandler implements Runnable {
     private Socket socket;
     private PlayersObservable playersObservable;

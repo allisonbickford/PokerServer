@@ -3,12 +3,25 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleEntry;;
-import java.util.regex.*;
+import java.util.AbstractMap.SimpleEntry;
 
+
+/**********************************************************************
+This class is used to store all of the necessary data for our poker
+game that needs to be known by all participating players. Such data
+includes:
+- Number of players
+- Host data
+
+Other functions include being able to start and stop the game.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 class CentralServer {
     private static Map<String, String> word = new LinkedHashMap<>(); // <"addr:port", username>
     private static Boolean gameRunning = false;

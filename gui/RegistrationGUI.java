@@ -3,9 +3,20 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 import java.net.UnknownHostException;
-
 import server.ClientSession;
 
+
+/**********************************************************************
+Graphical user interface used by players to connect to the central
+server and to determine their login name to be identified by other
+players in the same game.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class RegistrationGUI extends JFrame {
     private JPanel regPanel = new JPanel();
     private JLabel cHostName, cPort, username,regText;
