@@ -82,10 +82,10 @@ public class Game {
     }
 
     public void raise(String host, int amount) {
-        this.pot += amount;
         this.currentBet += amount;
+        this.pot += this.currentBet;
         int playerIndex = findUserIndex(host);
-        this.players.get(playerIndex).removeMoney(amount);
+        this.players.get(playerIndex).removeMoney(this.currentBet);
         this.players.get(playerIndex).setCurrentBet(this.currentBet);
         this.players.get(playerIndex).setLastAction("Raise to $" + this.currentBet);
         this.endOfRoundIndex = playerIndex;
