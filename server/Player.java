@@ -3,6 +3,25 @@ package server;
 import gui.CardPanel;
 import game.Card;
 
+
+/**********************************************************************
+The Player class is used to create an instance of poker player. The
+poker player has the following attributes:
+- name                 - host name
+- money                - current bet
+- last action          - if it is the player's turn
+- role                 - if the player has folded
+- two cards
+
+Getters and setters are used to access the properties of the Player
+class.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class Player {
     private String name;
     private String hostName;
@@ -21,6 +40,15 @@ public class Player {
         this.name = name;
         this.hostName = hostName;
         this.money = 100;
+        this.lastAction = "";
+        this.role = "";
+        this.cardPanel = new CardPanel();
+        this.hasFolded = false;
+        this.currentBet = 0;
+        this.isTurn = false;
+    }
+
+    public void reset() {
         this.lastAction = "";
         this.role = "";
         this.cardPanel = new CardPanel();
@@ -62,6 +90,11 @@ public class Player {
 
     public void fold() {
         this.hasFolded = true;
+        this.cardPanel.fold();
+    }
+
+    public void setFolded(boolean folded) {
+        this.hasFolded = false;
     }
 
     public void setCurrentBet(int bet) {

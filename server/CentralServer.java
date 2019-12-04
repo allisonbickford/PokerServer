@@ -3,12 +3,25 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleEntry;;
-import java.util.regex.*;
+import java.util.AbstractMap.SimpleEntry;
 
+
+/**********************************************************************
+This class is used to store all of the necessary data for our poker
+game that needs to be known by all participating players. Such data
+includes:
+- Number of players
+- Host data
+
+Other functions include being able to start and stop the game.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 class CentralServer {
     private static Map<String, String> word = new LinkedHashMap<>(); // <"addr:port", username>
     private static Boolean gameRunning = false;
@@ -215,11 +228,8 @@ class SubServerHandler implements Runnable {
                             playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
                         }
                         CentralServer.broadcast(playerMessage);
-                    } else if(clientCommand.startsWith("endPhase")){
-                        String message = this.socket.getPort() + " endPhase ";
-                        CentralServer.broadcast(message);
-                        phase++;
-                    } else if(clientCommand.startsWith("score:")){
+                        
+                    } else if(clientCommand.startsWith("score")){
                         String hostName = commands[1];
                         int score = Integer.parseInt(commands[2]);
 
@@ -227,44 +237,20 @@ class SubServerHandler implements Runnable {
                             CentralServer.setWinner(new SimpleEntry<String, Integer>(hostName, score));
                         }
                         CentralServer.incScoresReceived();
-                        System.out.println("cs score: " + CentralServer.getScoresReceived());
+
+                        System.out.println(CentralServer.getScoresReceived());
+                        
                         if (CentralServer.getScoresReceived() == CentralServer.getNumberOfPlayers()) {
                             String message = String.format("%d winner: %s", this.socket.getPort(), CentralServer.getWinner().getKey());
                             CentralServer.broadcast(message);
                             CentralServer.clearScores();
                         }
-                    } else if(clientCommand.startsWith("bet:")){
-                        //1 = user 2 == bet amount
-                        System.out.println("New bet from: " + commands[1] +" for $"+ commands[2]);
-                        String message = this.socket.getPort() +" bet " + commands[1] + " " + commands[2];
-                        CentralServer.broadcast(message);
 
-                    }else if(clientCommand.startsWith("foldWin:")){
+                    } else if(clientCommand.startsWith("flopWin")){
+
                         String message = String.format("%d winner: %s", this.socket.getPort(), commands[1]);
                         CentralServer.broadcast(message);
                         CentralServer.clearScores();
-                    }
-                    else if(clientCommand.startsWith("raise:")){
-                        //1 = user 2 == bet amount
-                        System.out.println("New raise from: " + commands[1] +" for $"+ commands[2]);
-                        String message = this.socket.getPort() +" raise " + commands[1] + " " + commands[2];
-                        CentralServer.broadcast(message);
-                    }
-                    else if(clientCommand.startsWith("check:")){
-                        //1 = user 2 == bet amount
-                        System.out.println("Check from: " + commands[1]);
-                        String message = this.socket.getPort() +" check " + commands[1];
-                        CentralServer.broadcast(message);
-                    }else if(clientCommand.startsWith("call:")){
-                        //1 = user 2 == bet amount
-                        System.out.println("call from: " + commands[1]);
-                        String message = this.socket.getPort() +" call " + commands[1];
-                        CentralServer.broadcast(message);
-                    }else if(clientCommand.startsWith("fold:")){
-                        //1 = user 2 == bet amount
-                        System.out.println("fold from: " + commands[1]);
-                        String message = this.socket.getPort() +" fold " + commands[1];
-                        CentralServer.broadcast(message);
                     }
                 }
             } catch (Exception e) {

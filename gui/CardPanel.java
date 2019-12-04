@@ -2,13 +2,20 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
-
 import game.Card;
 
+
+/**********************************************************************
+JPnael object used to represent card objects on the user interface.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class CardPanel extends JPanel {
     Card firstCard;
     Card secondCard;

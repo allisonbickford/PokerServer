@@ -1,23 +1,25 @@
 package game;
 
-/* -----------------------------------------------------------
-   Encoding:
-        Suit: 4 = Spade
-              3 = Heart
-              2 = Club
-              1 = Diamond
-        Rank:  A = 1
-               2 = 2
-               ...
-               J = 11
-               Q = 12
-               K = 13
-   Card:
-         byte cardSuit;                -- contain 1, 2, 3, or 4
-         byte cardRank;                -- contain 2, 3, ... 13, 14
-   ----------------------------------------------------------- */
+/**********************************************************************
+Encoding:
+Suit: 4 = Spade
+3 = Heart
+2 = Club
+1 = Diamond
+Rank:  A = 1
+2 = 2
+...
+J = 11
+Q = 12
+K = 13
+Card:
+byte cardSuit;                -- contain 1, 2, 3, or 4
+byte cardRank;                -- contain 2, 3, ... 13, 14
 
-   public class Card {
+source: https://github.com/ckurtm/Poker/blob/master/src/main/
+java/com/peirr/poker/models/Card.java
+ **********************************************************************/
+public class Card {
     public static final int SPADE = 4;
     public static final int HEART = 3;
     public static final int CLUB = 2;

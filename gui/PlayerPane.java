@@ -2,14 +2,24 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.File;
-import java.io.IOException;
 import javax.imageio.ImageIO;
-
 import game.*;
 import server.ClientSession;
 
+
+/**********************************************************************
+JPanel object that handles displaying many of the options represented
+on the poker table for the player. This view displays the player's
+two cards determined for each round. The view also displays the
+player's ability to check, bet, and fold.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 class PlayerPane extends JPanel {
     private Card firstCard, secondCard;
     private ImageIcon firstCardImg, secondCardImg;
@@ -27,10 +37,7 @@ class PlayerPane extends JPanel {
         this.checkBtn = new JButton("Check");
         this.checkBtn.addActionListener(e -> {
             if (((JButton) e.getSource()).getText().equals("Call")) {
-                int checkAmount = Integer.parseInt(
-                    session.getObservable().getLastAction().getValue().replaceAll("[^\\d.]", "") // remove "Bet " from action
-                );
-                session.sendBetMessage(checkAmount);
+                session.sendCallMessage();
             } else {
                 session.sendCheckMessage();
             }
@@ -54,7 +61,11 @@ class PlayerPane extends JPanel {
         SpinnerNumberModel numberSpinnerModel = new SpinnerNumberModel(1, 1, 100, 1);
         betSpinner = new JSpinner(numberSpinnerModel);
         this.betBtn.addActionListener(e -> {
-            session.sendBetMessage(numberSpinnerModel.getNumber().intValue());
+            if (((JButton) e.getSource()).getText().equals("Bet")) {
+                session.sendBetMessage(numberSpinnerModel.getNumber().intValue());
+            } else {
+                session.sendRaiseMessage(numberSpinnerModel.getNumber().intValue());
+            }
         });
         cons.gridx = 1;
         this.add(betSpinner, cons);

@@ -3,12 +3,22 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.text.*;
-import java.lang.*;
-import javax.swing.*;
-
 import game.Card;
+import game.Deck;
+import gui.GUI;
 
+
+/**********************************************************************
+Manages most of the fucntionality used by a player in a poker game. The
+ClientSession class is responisble for broadcasting information from
+clients to the central server.
+
+@author Allison Bickford
+@author R.J. Hamilton
+@author Johnathon Kileen
+@author Michelle Vu
+@version December 2019
+ **********************************************************************/
 public class ClientSession {
     private int port;
     private int mutablePort;
@@ -17,8 +27,8 @@ public class ClientSession {
     private Socket controlSocket;
     private DataInputStream in;
     private DataOutputStream out;
-    private Server server;
 
+    private GUI gui;
 
     public ClientSession(String username, String centralAddress) throws UnknownHostException {
         try {
@@ -27,12 +37,15 @@ public class ClientSession {
             this.address = InetAddress.getLoopbackAddress().getHostAddress();
             this.port = this.centralSocket.getLocalPort();
             this.mutablePort = this.port + 7;
+
             String connMessage = String.format("newuser: %s %s:%d \n", username, this.address, this.port);
             System.out.println("Registering with central: " + connMessage);
             DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
             centralDOS.writeBytes(connMessage);
+
+            this.gui = new GUI(this);
             new Thread(
-                this.server = new Server(this.port, username)
+                new Server(this.port, this)
             ).start();
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -44,8 +57,7 @@ public class ClientSession {
             System.out.println("Wow that sucked");
         }
     }
-
-
+  
     public void startGame() {
         try {
             DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
@@ -55,8 +67,39 @@ public class ClientSession {
         }
     }
 
-    public PlayersObservable getObservable() {
-        return this.server.getObservable();
+    public void dealCards(Deck deck) {
+        this.mutablePort += 7;
+        for (Player player: Server.getRegisteredPlayers()) {
+            if (player.getHostName().contains(this.getHostName())) { continue; } // don't send to ourselves
+            Card card1 = deck.draw();
+            Card card2 = deck.draw();
+            String message = String.format("%d yourcards: %s %s %s %s \n", 
+                this.mutablePort,
+                card1.suit(),
+                card1.rank(),
+                card2.suit(),
+                card2.rank()
+            );
+            String[] serverInfo = player.getHostName().split(":");
+            try {
+                Socket tmpSocket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
+                DataOutputStream dos = new DataOutputStream(tmpSocket.getOutputStream());
+                dos.writeBytes(message);
+                dos.flush();
+                dos.close();
+                tmpSocket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        Card myCard1 = deck.draw();
+        Card myCard2 = deck.draw();
+        System.out.println("dealt to self: " + myCard1.rank() + " " + myCard1.suitStr() + " " + myCard2.rank() + " " + myCard2.suitStr());
+        int myIndex = Server.getGame().findUserIndex(this.getHostName());
+        Server.getGamePlayers().get(myIndex).setCards(myCard1, myCard2);
+        Server.getGame().setDeck(deck);
+        this.gui.initializeGameGUI();
+        updatePot();
     }
 
     /**
@@ -64,7 +107,7 @@ public class ClientSession {
      * @param message message to send
      */
     public void broadcast(String message) {
-        for (Player player: this.getObservable().getPlayers()) {
+        for (Player player: Server.getGamePlayers()) {
             if (player.getHostName().contains(this.getHostName())) { continue; } // don't send to ourselves
             String[] serverInfo = player.getHostName().split(":");
             try {
@@ -81,150 +124,139 @@ public class ClientSession {
     }
 
     public void sendCheckMessage() {
+        if (Server.getGame().endOfPhase() && Server.getGame().getDealerHostName().equals(this.getHostName())) {
+            endPhase();
+        }
         this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
         String message = String.format("%d action: %s Check\n", this.mutablePort, this.getHostName());
         broadcast(message);
-        this.getObservable().setLastAction(this.getHostName(), "Check");
+        Server.getGame().check(this.getHostName());
+        this.updateMyPanel("Check");
+    }
+
+    public void sendCallMessage() {
+        if (Server.getGame().endOfPhase() && Server.getGame().getDealerHostName().equals(this.getHostName())) {
+            endPhase();
+        }
+        this.mutablePort += 7;
+        String message = String.format("%d action: %s Call\n", this.mutablePort, this.getHostName());
+        broadcast(message);
+        Server.getGame().call(this.getHostName());
+        this.updateMyPanel("Call");
+        updatePot();
     }
 
     public void sendBetMessage(int amount) {
-        int myIndex = 0;
-        for (int i = 0; i < this.getObservable().getPlayers().size(); i++) {
-            if (this.getObservable().getPlayers().get(i).getHostName().equals(this.getHostName())) {
-                myIndex = i;
-                break;
-            }
+        if (Server.getGame().endOfPhase() && Server.getGame().getDealerHostName().equals(this.getHostName())) {
+            endPhase();
         }
-        // give money to the pot
-        this.getObservable().getPlayers().get(myIndex).removeMoney(amount);
-        this.getObservable().addToPot(amount);
-        
         this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
         String message = String.format("%d action: %s Bet %d\n", this.mutablePort, this.getHostName(), amount);
-        if (this.getObservable().getLastAction().getValue().startsWith("Bet")) {
-            this.getObservable().setLastAction(this.getHostName(), "Call $" + amount);
-        } else {
-            this.getObservable().setLastAction(this.getHostName(), "Bet $" + amount);
-            this.getObservable().setLastPlayerToBet(this.getHostName());
-        }
+        // give money to the pot
+        Server.getGame().bet(this.getHostName(), amount);
         broadcast(message);
+        this.updateMyPanel("Bet");
+        updatePot();
     }
 
-    public void sendDeckMessage(Card card1, Card card2, String hostName){
+    public void sendRaiseMessage(int amount) {
+        if (Server.getGame().endOfPhase() && Server.getGame().getDealerHostName().equals(this.getHostName())) {
+            endPhase();
+        }
         this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
-        String message = String.format("%d deck: %s Deck %d %d %d %d %s \n", 
-            this.mutablePort,
-            this.getHostName(),
-            card1.rank(),
-            card1.suit(),
-            card2.rank(),
-            card2.suit(),
-            hostName);
-        System.out.println(message);
-        broadcastDeck(message);
+        String message = String.format("%d action: %s Raise %d\n", this.mutablePort, this.getHostName(), amount);
+        // give money to the pot
+        Server.getGame().raise(this.getHostName(), amount);
+        broadcast(message);
+        this.updateMyPanel("Raise");
+        updatePot();
     }
 
-    public void broadcastDeck(String message){
-        String[] commands;
-        commands = message.split(" ");
-        for (Player player: this.getObservable().getPlayers()) {
-            if (player.getHostName().contains(commands[2])) { continue; }
-            if(player.getHostName().contains(commands[8])){
-                String[] serverInfo = player.getHostName().split(":");
-            try {
-                Socket tmpSocket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
-                DataOutputStream dos = new DataOutputStream(tmpSocket.getOutputStream());
-                dos.writeBytes(message);
-                dos.flush();
-                dos.close();
-                tmpSocket.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        }
-    }
     public void sendFoldMessage() {
+        if (Server.getGame().endOfPhase() && Server.getGame().getDealerHostName().equals(this.getHostName())) {
+            endPhase();
+        }
+        if (Server.getGamePlayers().get(Server.getGame().getTurnIndex()).getLastAction().contains("Blind")) {
+            this.gui.getGameGUI().actionAfterBet();
+            this.gui.getGameGUI().stopPlay();
+        }
         this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
         String message = String.format("%d action: %s Fold\n", this.mutablePort, this.getHostName());
-        this.getObservable().setLastAction(this.getHostName(), "Fold");
+        Server.getGame().fold(this.getHostName());
         broadcast(message);
-        
-        int myIndex = 0;
-        for (int i = 0; i < this.getObservable().getPlayers().size(); i++) {
-            if (this.getObservable().getPlayers().get(i).getHostName().equals(this.getHostName())) {
-                myIndex = i;
-                break;
+        if (Server.getGame().playersNotFolded() == 1) {
+            String host="";
+            for (Player player: Server.getGame().getPlayers()) {
+                if (!player.hasFolded()) {
+                    host = player.getHostName();
+                }
             }
-        }
-        //check if its a fold win.
-        this.getObservable().getPlayers().get(myIndex).fold();
-        int j =1;
-        String host="";
-        for (int i = 0; i < this.getObservable().getPlayers().size(); i++) {
-            if (this.getObservable().getPlayers().get(i).hasFolded()) {
-                j++;
-            }else{
-                host = this.getObservable().getPlayers().get(i).getHostName();
-            }
-        }
-        if(j==this.getObservable().getPlayers().size()){
-           // this.mutablePort += 7;
-           // message = String.format("%d winner: %s\n", this.mutablePort, host);
-            //this.getObservable().setRoundWinner(host);
-            //broadcast(message);
             try {
                 DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
-                centralDOS.writeBytes(String.format("foldWin: %s\n", host));
+                centralDOS.writeBytes(String.format("flopWin: %s ", host));
                 centralDOS.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("There was a problem sending your score.");
+                System.out.println("There was a problem sending win.");
             }
+        } else {
+            Server.getGame().nextTurn();
         }
-
     }
 
     public void endPhase() {
         this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
-        String message = String.format("%d endPhase %s\n",this.mutablePort, this.getHostName());
+        String cardString = "";
+        Deck deck = Server.getGame().getDeck();
+        Server.getGame().nextPhase();
+        ArrayList<Card> cards = new ArrayList<>();
+        if (Server.getGame().phaseString().equals("flop")) {
+            for (int i = 0; i < 3; i++) {
+                Card card = deck.draw();
+                cards.add(card);
+                cardString += card.suit() + " " + card.rank() + " ";
+            }
+        } else {
+            Card card = deck.draw();
+            cards.add(card);
+            cardString = String.format("%d %d", card.suit(), card.rank());
+        }
+        String message = String.format("%d endPhase %s\n", this.mutablePort, cardString);
         broadcast(message);
-
-    }
+        Server.getGame().setDeck(deck);
+        Server.getGame().addToBoard(cards);
+        gui.getGameGUI().setButtonsToBeginningOfRound();
+        switch (Server.getGame().phaseString()) {
+            case "flop":
+                this.gui.getGameGUI().flop(new Card[]{cards.get(0), cards.get(1), cards.get(2)});
+                break;
+            case "turn":
+                this.gui.getGameGUI().turn(cards.get(0));
+                break;
+            case "river":
+                this.gui.getGameGUI().river(cards.get(0));
+                break;
+            case "end":
+                this.endRound();
+            }
+        }
 
     public void endRound() {
-        this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
-        String message = String.format("%d endRound %s\n",this.mutablePort, this.getHostName());
-        broadcast(message);
-    }
-
-    public void sendNextPhase(Card[] cards) {
-        this.mutablePort += 7;
-        String gameHost = this.server.getObservable().getHost();
-        String cardString = "";
-        ArrayList<Card> cardArray = new ArrayList<>();
-        for (Card card: cards) {
-            cardArray.add(card);
-            cardString += " " + card.rank() + " " + card.suit();
+        try {
+            DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
+            centralDOS.writeBytes(String.format("flopWin: %s ", this.getHostName()));
+            centralDOS.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("There was a problem sending win.");
         }
-        System.out.println("ending phase from cs");
-       //String message = String.format("%d endPhase %s\n",this.mutablePort, this.getHostName());
-        String message = String.format("%d endPhase %s %s\n", this.mutablePort, this.getHostName(), cardString);
-        broadcast(message);
-        this.getObservable().addToBoard(cardArray);
-        //endPhase();
+        this.sendCards();
     }
 
     public void sendScore(int score) {
         try {
             DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
-            centralDOS.writeBytes(String.format("score: %s %d\n", this.getHostName(), score));
+            centralDOS.writeBytes(String.format("score: %s %d", this.getHostName(), score));
             centralDOS.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -232,11 +264,20 @@ public class ClientSession {
         }
     }
 
-    public void sendCards(Card[] cards) {
+    public void sendCards() {
         this.mutablePort += 7;
-        String message = String.format("%d cards: %s %s %s %s %s\n", 
-            this.mutablePort, this.getHostName(), cards[0].suit(), cards[0].rank(), cards[1].suit(), cards[1].rank());
-        broadcast(message);
+        int myIndex = Server.getGame().findUserIndex(this.getHostName());
+        if (!Server.getGamePlayers().get(myIndex).hasFolded()) {
+            Card[] cards = Server.getGamePlayers().get(myIndex).getCards();
+            String message = String.format("%d cards: %s %s %s %s %s\n", 
+                this.mutablePort, this.getHostName(), cards[0].suit(), cards[0].rank(), cards[1].suit(), cards[1].rank());
+                broadcast(message);
+            this.sendScore(Server.getGame().getScore(cards));
+        } else {
+            this.sendScore(0); // make sure this is too low to win
+        }
+        this.gui.getGameGUI().stopPlay();
+        Server.getGame().nextPhase();
     }
 
     //closes client session
@@ -259,6 +300,29 @@ public class ClientSession {
         }
     }
 
+    public GUI getGUI() {
+        return this.gui;
+    }
+
+    public void updatePot() {
+        this.gui.getGameGUI().setPotLabel(Server.getGame().getPot());
+    }
+
+    public void updateMyPanel(String lastAction) {
+        this.gui.getGameGUI().changePlayerButtons(lastAction);
+        int myIndex = Server.getGame().findUserIndex(this.getHostName());
+        if (Server.getGamePlayers().get(myIndex).getLastAction().contains("Small")) {
+            this.gui.getGameGUI().actionAfterBet();
+        }
+        if (Server.getGame().getTurnHostName().equals(this.getHostName()) &&
+            !Server.getGame().getPlayers().get(myIndex).hasFolded()) {
+            this.gui.getGameGUI().resumePlay();
+        } else {
+            this.gui.getGameGUI().stopPlay();
+        }
+        this.gui.getGameGUI().updateTable();
+    }
+  
     public boolean isConnected() {
         return this.controlSocket != null;
     }
