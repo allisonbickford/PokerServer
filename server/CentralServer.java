@@ -228,13 +228,16 @@ class SubServerHandler implements Runnable {
                             playerMessage += String.format(" %s\0%s", player.getKey(), player.getValue());
                         }
                         CentralServer.broadcast(playerMessage);
+                        
                     } else if(clientCommand.startsWith("score")){
                         String hostName = commands[1];
                         int score = Integer.parseInt(commands[2]);
+
                         if ((int)CentralServer.getWinner().getValue() < score) {
                             CentralServer.setWinner(new SimpleEntry<String, Integer>(hostName, score));
                         }
                         CentralServer.incScoresReceived();
+
                         System.out.println(CentralServer.getScoresReceived());
                         
                         if (CentralServer.getScoresReceived() == CentralServer.getNumberOfPlayers()) {
@@ -242,7 +245,9 @@ class SubServerHandler implements Runnable {
                             CentralServer.broadcast(message);
                             CentralServer.clearScores();
                         }
+
                     } else if(clientCommand.startsWith("flopWin")){
+
                         String message = String.format("%d winner: %s", this.socket.getPort(), commands[1]);
                         CentralServer.broadcast(message);
                         CentralServer.clearScores();

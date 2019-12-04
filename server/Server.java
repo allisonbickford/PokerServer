@@ -39,6 +39,7 @@ public class Server implements Runnable {
             while(true) {
                 Socket connectionSocket = welcomeSocket.accept();
                 System.out.println("Victim at: " + connectionSocket.getPort());
+
                 new Thread(new ClientHandler(connectionSocket, this.clientSession, this.address + ":" + this.port)).start();
             }
         } catch(Exception e) {
@@ -132,12 +133,15 @@ class ClientHandler implements Runnable {
                             new Player(info[1], info[0])
                         );
                     }
+                  
                     Server.setPlayers(updatedPlayers);
                     clientSession.getGUI().updatePlayerLobby(updatedPlayers);
+
                 } else if (clientCommand.startsWith("STARTING!")) {
                     tokens.nextToken(); // Host:
                     String host = tokens.nextToken();
                     System.out.println("Dealer is: " + host);
+
                     int myIndex = 0;
                     int dealerIndex = 0;
                     for (int i = 0; i < Server.getRegisteredPlayers().size(); i++) {
@@ -174,6 +178,7 @@ class ClientHandler implements Runnable {
                         Deck deck = new Deck();
                         clientSession.dealCards(deck);
                     }
+
                 } else if (clientCommand.startsWith("cards:")) {
                     String host = tokens.nextToken();
                     Card card1 = new Card(Integer.parseInt(tokens.nextToken()), Integer.parseInt(tokens.nextToken()));
@@ -234,6 +239,7 @@ class ClientHandler implements Runnable {
                         clientSession.getGUI().getGameGUI().setButtonsToBeginningOfRound();
                     }
                 } 
+
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("There was a problem, " +

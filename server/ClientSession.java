@@ -27,6 +27,7 @@ public class ClientSession {
     private Socket controlSocket;
     private DataInputStream in;
     private DataOutputStream out;
+
     private GUI gui;
 
     public ClientSession(String username, String centralAddress) throws UnknownHostException {
@@ -56,7 +57,7 @@ public class ClientSession {
             System.out.println("Wow that sucked");
         }
     }
-
+  
     public void startGame() {
         try {
             DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
@@ -321,7 +322,7 @@ public class ClientSession {
         }
         this.gui.getGameGUI().updateTable();
     }
-
+  
     public boolean isConnected() {
         return this.controlSocket != null;
     }
