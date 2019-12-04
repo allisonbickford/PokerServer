@@ -100,7 +100,7 @@ public class Game {
 
     public void call(String host) {
         int playerIndex = findUserIndex(host);
-        int amountToCall = this.currentBet - this.players.get(playerIndex).getCurrentBet();
+        int amountToCall = this.currentBet;
         this.players.get(playerIndex).removeMoney(amountToCall);
         this.players.get(playerIndex).setLastAction("Call $" + this.currentBet);
         this.pot += amountToCall;
@@ -130,12 +130,12 @@ public class Game {
                 }
             }
             if (this.players.size() > 2 && tmpPlayer.getRole().contains("SB")) {
-                endOfRoundIndex = i;
+                //endOfRoundIndex = i;
                 while (this.players.get(endOfRoundIndex).hasFolded()) {
                     endOfRoundIndex = (endOfRoundIndex + 1) % this.players.size();
                 }
             } else if (this.players.size() == 2 && tmpPlayer.getRole().contains("D")) {
-                endOfRoundIndex = i;
+                //endOfRoundIndex = i;
                 while (this.players.get(endOfRoundIndex).hasFolded()) {
                     endOfRoundIndex = (endOfRoundIndex + 1) % this.players.size();
                 }
@@ -164,6 +164,7 @@ public class Game {
                 break;
             default:
                 this.currentPhase = Phase.PREFLOP;
+                this.pot = 0;
                 break;
         }
     }

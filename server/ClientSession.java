@@ -241,9 +241,14 @@ public class ClientSession {
         }
 
     public void endRound() {
-        this.mutablePort += 7;
-        String message = String.format("%d endRound %s\n", this.mutablePort, this.getHostName());
-        broadcast(message);
+        try {
+            DataOutputStream centralDOS = new DataOutputStream(this.centralSocket.getOutputStream());
+            centralDOS.writeBytes(String.format("flopWin: %s ", this.getHostName()));
+            centralDOS.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("There was a problem sending win.");
+        }
         this.sendCards();
     }
 
